@@ -2,10 +2,10 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synergy OCC - Professional Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Synergy OCC Mobile Optimized</title>
     <style>
-        /* CSS DEFINICE - KOMPLETNÍ STYLING */
+        /* --- KOMPLEXNÍ STYLOVÁNÍ --- */
         :root {
             --syn-blue: #004b93;
             --syn-dark: #011d3a;
@@ -13,434 +13,474 @@
             --syn-yellow: #ffcc00;
             --syn-green: #4db748;
             --syn-red: #cc0000;
-            --syn-light-blue: #00a4e4;
-            --lcd-white: #ffffff;
-            --lcd-grey: #e0e0e0;
+            --syn-btn-blue: #00a4e4;
+            --lcd-bg: #f0f0f0;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
-            background: #0a0a0a;
+            background: #000;
             color: #fff;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Roboto', 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
             overflow: hidden;
-            user-select: none;
+            touch-action: manipulation;
         }
 
-        /* HLAVNÍ RÁM ZAŘÍZENÍ - KOMPAKTNÍ VELIKOST */
+        /* ŠASI - Optimalizace pro mobil (flexibilní šířka) */
         #occ-frame {
-            width: 980px;
-            height: 600px;
+            width: 98vw;
+            height: 96vh;
+            max-width: 1024px;
             background: var(--syn-blue);
-            border-radius: 30px;
-            padding: 20px;
+            border-radius: 15px;
+            padding: 10px;
             position: relative;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 30px 60px rgba(0,0,0,0.9);
-            border: 10px solid #00264d;
+            border: 4px solid #002d5a;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        /* DISPLEJ */
         #screen {
-            width: 100%;
-            height: 100%;
+            flex: 1;
             background: #000;
-            border-radius: 8px;
-            position: relative;
+            border-radius: 5px;
             overflow: hidden;
-            border: 4px solid #111;
+            position: relative;
+            border: 2px solid #111;
         }
 
-        /* BOOT SCREEN - 14 AKCÍ */
-        #boot-layer {
+        /* --- BOOT & LOGY --- */
+        #boot-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
-            z-index: 1000;
-            padding: 40px;
+            z-index: 2000;
+            padding: 15px;
             color: #00ff00;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            display: none; /* Zapne se přes JS */
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.3;
+            overflow-y: auto;
+            display: none;
         }
 
-        /* HLAVNÍ UI */
-        .ui-root {
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a;
+            z-index: 1500;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .login-display {
+            background: #000;
+            color: var(--syn-yellow);
+            width: 100%;
+            max-width: 250px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+            border: 2px solid #444;
+            font-family: monospace;
+        }
+
+        /* --- HLAVNÍ UI --- */
+        .ui-main {
             display: none;
             flex-direction: column;
             height: 100%;
             background: #000;
         }
 
-        /* TOP BAR */
         .header {
-            height: 40px;
+            height: 35px;
             background: #000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 15px;
-            font-size: 16px;
+            padding: 0 10px;
+            font-size: 12px;
             font-weight: bold;
-            border-bottom: 2px solid #222;
+            border-bottom: 1px solid #333;
         }
 
-        .delay-tag {
-            padding: 2px 12px;
-            border-radius: 4px;
-            font-size: 20px;
-            min-width: 70px;
-            text-align: center;
+        .delay-pill {
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 14px;
         }
-        .delay-late { background: var(--syn-red); color: #fff; }
-        .delay-ok { background: #444; color: #fff; }
+        .delay-late { background: var(--syn-red); }
+        .delay-ok { background: #444; }
 
-        /* PRACOVNÍ PLOCHA */
-        .main-grid {
+        .workspace {
             flex: 1;
             display: grid;
-            grid-template-columns: 85px 1fr 300px;
-            background: #333;
-            gap: 2px;
+            grid-template-columns: 55px 1fr 220px;
+            gap: 1px;
+            background: #444;
             overflow: hidden;
         }
 
-        /* LEVÝ PANEL (VSTUPY LINKA/SPOJ) */
-        .side-inputs {
+        /* LEVÝ PANEL */
+        .sidebar-left {
             background: #111;
             display: flex;
             flex-direction: column;
-            padding: 10px 5px;
-            gap: 10px;
+            padding: 5px 2px;
+            gap: 8px;
         }
-        .input-label { font-size: 10px; color: #777; text-align: center; text-transform: uppercase; }
-        .input-value {
+        .side-val {
             background: #222;
-            border: 1px solid var(--syn-light-blue);
+            border: 1px solid var(--syn-btn-blue);
             color: var(--syn-yellow);
             text-align: center;
-            padding: 8px 0;
-            font-size: 15px;
+            padding: 4px 0;
+            font-size: 11px;
             font-weight: bold;
-            cursor: pointer;
         }
 
-        /* STŘEDNÍ PANEL (ITINERÁŘ) */
-        .itinerary {
-            background: var(--lcd-white);
+        /* STŘED - ZASTÁVKY */
+        .stop-area {
+            background: #fff;
             color: #000;
             overflow-y: auto;
             position: relative;
         }
-        .stop-item {
+        .stop-row {
             display: grid;
-            grid-template-columns: 75px 40px 1fr;
-            padding: 10px 15px;
-            border-bottom: 1px solid #ddd;
-            font-size: 18px;
+            grid-template-columns: 50px 25px 1fr;
+            padding: 8px 5px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
             align-items: center;
         }
-        .stop-item.active {
+        .stop-row.active {
             background: var(--syn-orange);
             color: #fff;
             font-weight: bold;
         }
 
-        .floating-price {
+        /* CENA */
+        .price-float {
             position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 50px;
+            bottom: 15px;
+            right: 15px;
+            font-size: 32px;
             font-weight: 900;
             color: var(--syn-red);
-            text-shadow: 2px 2px 0 #fff;
-            z-index: 100;
+            text-shadow: 1px 1px 0 #fff;
+            pointer-events: none;
         }
 
-        /* PRAVÝ PANEL (NUMERIKA) */
-        .keypad {
+        /* KLÁVESNICE - MENŠÍ TLAČÍTKA */
+        .numpad {
             background: #bbb;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 2px;
-            padding: 4px;
+            padding: 3px;
         }
-        .k-btn {
+        .btn {
             background: var(--syn-blue);
             color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
+            font-size: 18px;
             font-weight: bold;
+            height: 48px;
             border: 1px solid #002d5a;
-            cursor: pointer;
-            height: 65px;
         }
-        .k-btn:active { background: var(--syn-light-blue); }
-        .k-btn.f { background: #555; font-size: 14px; }
-        .k-btn.orange { background: var(--syn-orange); }
-        .k-btn.green { background: var(--syn-green); }
+        .btn:active { background: var(--syn-btn-blue); }
+        .btn.f { background: #555; font-size: 11px; }
+        .btn.orange { background: var(--syn-orange); }
+        .btn.green { background: var(--syn-green); }
 
-        /* SPODNÍ PANEL (JÍZDENKY) */
-        .ticket-panel {
-            height: 120px;
-            background: #222;
+        /* JÍZDENKY DOLE */
+        .ticket-grid {
+            height: 90px;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: 1fr 1fr;
             gap: 2px;
-            padding: 4px;
+            padding: 3px;
+            background: #1a1a1a;
         }
         .t-btn {
-            background: var(--syn-light-blue);
+            background: var(--syn-btn-blue);
             color: #fff;
             border: none;
-            font-size: 13px;
+            font-size: 10px;
             font-weight: bold;
-            cursor: pointer;
             text-transform: uppercase;
         }
         .t-btn.selected { background: var(--syn-yellow); color: #000; }
         .t-btn.red { background: var(--syn-red); }
 
-        /* 🍄 POWER BUTTON */
-        #pwr-btn {
+        /* 🍄 POWER */
+        #pwr-trigger {
             position: absolute;
-            bottom: 25px;
-            left: 25px;
-            width: 60px;
-            height: 60px;
+            bottom: 20px;
+            left: 20px;
+            width: 45px;
+            height: 45px;
             background: #333;
-            border: 4px solid #555;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 30px;
-            cursor: pointer;
-            z-index: 2000;
-            transition: 0.2s;
+            font-size: 24px;
+            z-index: 3000;
+            border: 3px solid #555;
+            box-shadow: 0 4px 10px #000;
         }
-        #pwr-btn:hover { background: #444; }
 
-        /* MODÁL PRO ZADÁVÁNÍ */
-        #modal {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 5000;
-        }
-        .modal-box {
-            background: #333;
-            padding: 25px;
-            border-radius: 15px;
-            width: 320px;
-            text-align: center;
-        }
-        .modal-display {
-            background: #000;
-            color: var(--syn-green);
-            font-family: monospace;
-            font-size: 32px;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 2px solid #555;
+        /* RESPONZIVNÍ ÚPRAVY PRO MALÉ MOBILY */
+        @media (max-width: 600px) {
+            .workspace { grid-template-columns: 45px 1fr 160px; }
+            .btn { height: 40px; font-size: 16px; }
+            .t-btn { font-size: 8px; }
+            .price-float { font-size: 24px; }
         }
     </style>
 </head>
 <body>
 
 <div id="occ-frame">
-    <div id="pwr-btn" onclick="startSystem()">🍄</div>
+    <div id="pwr-trigger" onclick="handlePower()">🍄</div>
 
     <div id="screen">
-        <div id="boot-layer"></div>
+        <div id="boot-overlay"></div>
 
-        <div id="app-ui" class="ui-root">
-            <div class="header">
-                <span id="txt-line-info">Jízda: 790968 / 2</span>
-                <span>07.05.2026</span>
-                <div id="val-delay" class="delay-tag delay-ok">+0 m</div>
-                <span id="val-clock">00:00:00</span>
-            </div>
-
-            <div class="main-grid">
-                <div class="side-inputs">
-                    <div class="input-label">Linka</div>
-                    <div class="input-value" onclick="openInput('line')">790968</div>
-                    <div class="input-label">Spoj</div>
-                    <div class="input-value" onclick="openInput('spoj')">2</div>
-                    <div style="flex:1"></div>
-                    <div class="input-value f" style="color:white" onclick="location.reload()">RESET</div>
-                </div>
-
-                <div class="itinerary" id="stop-container">
-                    </div>
-
-                <div class="keypad">
-                    <div class="k-btn f">Přestup</div><div class="k-btn">7</div><div class="k-btn">8</div><div class="k-btn">9</div>
-                    <div class="k-btn f">Multi.</div><div class="k-btn">4</div><div class="k-btn">5</div><div class="k-btn">6</div>
-                    <div class="k-btn f">Karta</div><div class="k-btn">1</div><div class="k-btn">2</div><div class="k-btn">3</div>
-                    <div class="k-btn f" onclick="clearBuffer()">Storno</div><div class="k-btn">.</div><div class="k-btn">0</div><div class="k-btn">±</div>
-                    <div class="k-btn orange" style="grid-column: span 2" onclick="nextStop()">DALŠÍ</div>
-                    <div class="k-btn green" style="grid-column: span 2" onclick="sellTicket()">
-                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </div>
-                </div>
-
-                <div class="floating-price" id="val-price">11,00 Kč</div>
-            </div>
-
-            <div class="ticket-panel">
-                <button class="t-btn selected" onclick="changeCat(this, 11)">Základní</button>
-                <button class="t-btn" onclick="changeCat(this, 5)">Dítě</button>
-                <button class="t-btn" onclick="changeCat(this, 8)">Student</button>
-                <button class="t-btn" onclick="changeCat(this, 8)">Osoba 65</button>
-                <button class="t-btn" onclick="changeCat(this, 0)">ZTP</button>
-                <button class="t-btn" onclick="changeCat(this, 7)">Pes</button>
-                <button class="t-btn" onclick="changeCat(this, 0)">Dítě do</button>
-                <button class="t-btn" onclick="changeCat(this, 0)">NavUstav</button>
-                <button class="t-btn" onclick="changeCat(this, 0)">Inv3st.</button>
-                <button class="t-btn red" onclick="location.reload()">ESC / KONEC</button>
+        <div id="login-screen">
+            <div style="color:#aaa; font-size:12px; margin-bottom:5px;" id="login-hint">Zadejte ID řidiče</div>
+            <div class="login-display" id="login-val">ID?</div>
+            <div class="numpad" style="grid-template-columns: repeat(3, 1fr); background:transparent; width: 100%; max-width: 250px;">
+                <div class="btn" onclick="loginType(1)">1</div><div class="btn" onclick="loginType(2)">2</div><div class="btn" onclick="loginType(3)">3</div>
+                <div class="btn" onclick="loginType(4)">4</div><div class="btn" onclick="loginType(5)">5</div><div class="btn" onclick="loginType(6)">6</div>
+                <div class="btn" onclick="loginType(7)">7</div><div class="btn" onclick="loginType(8)">8</div><div class="btn" onclick="loginType(9)">9</div>
+                <div class="btn f" onclick="loginClear()">C</div><div class="btn" onclick="loginType(0)">0</div><div class="btn green" onclick="loginSubmit()">OK</div>
             </div>
         </div>
 
-        <div id="modal">
-            <div class="modal-box">
-                <h3 id="modal-title" style="color:#fff; margin-top:0">Zadejte hodnotu</h3>
-                <div class="modal-display" id="modal-val">---</div>
-                <div class="keypad" style="grid-template-columns: repeat(3, 1fr); background:transparent">
-                    <div class="k-btn" onclick="modType(1)">1</div><div class="k-btn" onclick="modType(2)">2</div><div class="k-btn" onclick="modType(3)">3</div>
-                    <div class="k-btn" onclick="modType(4)">4</div><div class="k-btn" onclick="modType(5)">5</div><div class="k-btn" onclick="modType(6)">6</div>
-                    <div class="k-btn" onclick="modType(7)">7</div><div class="k-btn" onclick="modType(8)">8</div><div class="k-btn" onclick="modType(9)">9</div>
-                    <div class="k-btn red" onclick="modClear()">C</div><div class="k-btn" onclick="modType(0)">0</div><div class="k-btn green" onclick="modConfirm()">OK</div>
+        <div id="ui-app" class="ui-main">
+            <div class="header">
+                <span id="h-line">790968 / 2</span>
+                <span id="h-date">07.05.2026</span>
+                <div id="h-delay" class="delay-pill delay-ok">+0 m</div>
+                <span id="h-clock">00:00:00</span>
+            </div>
+
+            <div class="workspace">
+                <div class="sidebar-left">
+                    <div style="font-size:8px; color:#555; text-align:center">LINKA</div>
+                    <div class="side-val" id="s-line">790968</div>
+                    <div style="font-size:8px; color:#555; text-align:center">SPOJ</div>
+                    <div class="side-val" id="s-spoj">2</div>
                 </div>
+
+                <div class="stop-area" id="stop-cont">
+                    </div>
+
+                <div class="numpad">
+                    <div class="btn f">PŘES</div><div class="btn">7</div><div class="btn">8</div><div class="btn">9</div>
+                    <div class="btn f">MULT</div><div class="btn">4</div><div class="btn">5</div><div class="btn">6</div>
+                    <div class="btn f">KART</div><div class="btn">1</div><div class="btn">2</div><div class="btn">3</div>
+                    <div class="btn f" onclick="storno()">STOR</div><div class="btn">.</div><div class="btn">0</div><div class="btn">±</div>
+                    <div class="btn orange" style="grid-column: span 2" onclick="driveNext()">DALŠÍ</div>
+                    <div class="btn green" style="grid-column: span 2" onclick="sell()">OK</div>
+                </div>
+
+                <div class="price-float" id="v-price">11,00 Kč</div>
+            </div>
+
+            <div class="ticket-grid">
+                <button class="t-btn selected" onclick="setTicket(this, 11)">Základní</button>
+                <button class="t-btn" onclick="setTicket(this, 5)">Dítě</button>
+                <button class="t-btn" onclick="setTicket(this, 8)">Student</button>
+                <button class="t-btn" onclick="setTicket(this, 8)">Osoba 65</button>
+                <button class="t-btn" onclick="setTicket(this, 0)">ZTP</button>
+                <button class="t-btn" onclick="setTicket(this, 7)">Pes</button>
+                <button class="t-btn" onclick="setTicket(this, 0)">Dítě do</button>
+                <button class="t-btn" onclick="setTicket(this, 0)">NavUstav</button>
+                <button class="t-btn" onclick="setTicket(this, 0)">Inv3st.</button>
+                <button class="t-btn red" onclick="location.reload()">KONEC</button>
             </div>
         </div>
     </div>
 </div>
 
-<audio id="snd-gong" src="gong.mp3" preload="auto"></audio>
+<audio id="snd-gong" src="gong.mp3"></audio>
 
 <script>
-    // --- DATA ---
-    const STOPS = [
-        { name: "Studená,,ul.1.máje a", time: "19:35" },
-        { name: "Studená,,H.Bolíko,roz", time: "19:38" },
-        { name: "Mrákotín", time: "19:45" },
-        { name: "Krahulčí", time: "19:49" },
-        { name: "Telč,,aut.nádr.", time: "19:59" },
-        { name: "Telč,,Interiér", time: "20:01" },
-        { name: "Dyjice,Dolní Dvorce", time: "20:03" },
-        { name: "Radkov", time: "20:08" }
-    ];
-
-    let state = {
-        line: "790968",
-        spoj: "2",
-        activeIdx: 0,
-        price: 11,
-        isBooted: false,
-        buffer: "",
-        target: ""
+    /* --- LOGIKA A STAV --- */
+    const CONFIG = {
+        driverId: "10342",
+        driverPin: "3508",
+        stops: [
+            {n: "Studená,,ul.1.máje a", t: "19:35"},
+            {n: "Studená,,H.Bolíko,roz", t: "19:38"},
+            {n: "Mrákotín", t: "19:45"},
+            {n: "Krahulčí", t: "19:49"},
+            {n: "Telč,,aut.nádr.", t: "19:59"},
+            {n: "Telč,,Interiér", t: "20:01"},
+            {n: "Dyjice,Dolní Dvorce", t: "20:03"}
+        ]
     };
 
-    // --- BOOTOVÁNÍ (14 AKCÍ) ---
-    function startSystem() {
-        if(state.isBooted) return;
-        const layer = document.getElementById('boot-layer');
-        layer.style.display = 'block';
+    let app = {
+        power: false,
+        booting: false,
+        loggedIn: false,
+        loginStep: 'id', // 'id' nebo 'pin'
+        buffer: "",
+        activeIdx: 0,
+        price: 11
+    };
 
-        // Odblokování audia
-        document.getElementById('snd-gong').play().then(()=> {
+    // 1. ZAPNUTÍ A LOGY
+    function handlePower() {
+        if(app.power || app.booting) return;
+        app.booting = true;
+        
+        const overlay = document.getElementById('boot-overlay');
+        overlay.style.display = 'block';
+
+        // Aktivace audia
+        document.getElementById('snd-gong').play().then(() => {
             document.getElementById('snd-gong').pause();
-            document.getElementById('snd-gong').currentTime = 0;
-        }).catch(()=>{});
+        }).catch(() => {});
 
-        const logActions = [
-            "Initializing SYNERGY OCC Hardware...",
-            "CPU: ARM Cortex-A53 1.4GHz detected.",
-            "RAM Check: 1024MB ... OK",
-            "Storage: onboard eMMC 8GB ... mounted.",
-            "Loading Linux Kernel 5.10.24-syn ...",
-            "Starting Network Services (LTE/GPRS) ... OK",
-            "Connecting to ROPID Dispatch Center ... Connected.",
-            "Initializing VDV-KA Smartcard Module ... OK",
-            "Loading Stop Database: 12.500 entries loaded.",
-            "GPS Lock: 49.1923N, 15.4512E (Fixed).",
-            "Verifying Driver Credentials ... Driver 10342 OK.",
-            "Loading Graphical User Interface ...",
-            "Syncing System Time via NTP ... Done.",
-            "SYSTEM READY. Starting Service Mode."
+        const logs = [
+            "SYS: Synergy Kernel 5.4.12 booting...",
+            "HW: CPU QuadCore ARM @ 1.2GHz ... OK",
+            "HW: MemTest 1024MB ... OK",
+            "HW: LTE Module ... Connected",
+            "HW: GPS Receiver ... Signal Found",
+            "OS: Mounting filesystems...",
+            "OS: Loading VDV-KA libraries...",
+            "OS: Starting Graphic Engine...",
+            "APP: Database check ... 14,205 stops",
+            "APP: Syncing RTC time...",
+            "APP: Connecting to dispatcher...",
+            "APP: Driver Auth Service started.",
+            "BOOT COMPLETE. Redirecting to Login."
         ];
 
-        let step = 0;
+        let i = 0;
         const interval = setInterval(() => {
-            layer.innerHTML += `<div><span style="color:#555">[${new Date().toLocaleTimeString()}]</span> ${logActions[step]}</div>`;
-            layer.scrollTop = layer.scrollHeight;
-            step++;
-            if(step >= logActions.length) {
+            overlay.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${logs[i]}</div>`;
+            overlay.scrollTop = overlay.scrollHeight;
+            i++;
+            if(i >= logs.length) {
                 clearInterval(interval);
                 setTimeout(() => {
-                    layer.style.display = 'none';
-                    document.getElementById('app-ui').style.display = 'flex';
-                    state.isBooted = true;
-                    initApp();
+                    overlay.style.display = 'none';
+                    document.getElementById('login-screen').style.display = 'flex';
+                    app.booting = false;
+                    app.power = true;
                 }, 1000);
             }
         }, 180);
     }
 
-    // --- APLIKACE ---
+    // 2. PŘIHLÁŠENÍ
+    function loginType(n) {
+        app.buffer += n;
+        updateLoginDisplay();
+    }
+
+    function loginClear() {
+        app.buffer = "";
+        updateLoginDisplay();
+    }
+
+    function updateLoginDisplay() {
+        const d = document.getElementById('login-val');
+        if(app.loginStep === 'id') {
+            d.innerText = app.buffer || "ID?";
+        } else {
+            d.innerText = "*".repeat(app.buffer.length) || "PIN?";
+        }
+    }
+
+    function loginSubmit() {
+        if(app.loginStep === 'id') {
+            if(app.buffer === CONFIG.driverId) {
+                app.loginStep = 'pin';
+                app.buffer = "";
+                document.getElementById('login-hint').innerText = "Zadejte PIN";
+                updateLoginDisplay();
+            } else {
+                alert("Neznámé ID řidiče!");
+                loginClear();
+            }
+        } else {
+            if(app.buffer === CONFIG.driverPin) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('ui-app').style.display = 'flex';
+                app.loggedIn = true;
+                initApp();
+            } else {
+                alert("Chybný PIN!");
+                loginClear();
+            }
+        }
+    }
+
+    // 3. HLAVNÍ APLIKACE
     function initApp() {
         renderStops();
-        updateDisplay();
         setInterval(tick, 1000);
     }
 
     function tick() {
         const now = new Date();
-        document.getElementById('val-clock').innerText = now.toLocaleTimeString('cs-CZ');
+        document.getElementById('h-clock').innerText = now.toLocaleTimeString('cs-CZ');
         
-        // Výpočet zpoždění
-        const planStr = STOPS[state.activeIdx].time;
-        const [ph, pm] = planStr.split(':').map(Number);
+        // Zpoždění
+        const plan = CONFIG.stops[app.activeIdx].t.split(':');
         const pDate = new Date();
-        pDate.setHours(ph, pm, 0);
-
+        pDate.setHours(plan[0], plan[1], 0);
+        
         const diff = Math.floor((now - pDate) / 60000);
-        const delEl = document.getElementById('val-delay');
+        const delEl = document.getElementById('h-delay');
         delEl.innerText = (diff >= 0 ? "+" : "") + diff + " m";
-        delEl.className = `delay-tag ${diff > 0 ? 'delay-late' : 'delay-ok'}`;
+        delEl.className = `delay-pill ${diff > 0 ? 'delay-late' : 'delay-ok'}`;
     }
 
     function renderStops() {
-        const cont = document.getElementById('stop-container');
+        const cont = document.getElementById('stop-cont');
         cont.innerHTML = '';
-        STOPS.forEach((s, i) => {
+        CONFIG.stops.forEach((s, i) => {
             const div = document.createElement('div');
-            div.className = `stop-item ${i === state.activeIdx ? 'active' : ''}`;
-            div.innerHTML = `<div>${s.time}</div><div style="font-size:11px; color:#888">21|</div><div>${s.name}</div>`;
+            div.className = `stop-row ${i === app.activeIdx ? 'active' : ''}`;
+            div.innerHTML = `<div>${s.t}</div><div style="font-size:9px; color:gray">25|</div><div>${s.n}</div>`;
             cont.appendChild(div);
         });
         const act = cont.querySelector('.active');
         if(act) act.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function nextStop() {
-        if(state.activeIdx < STOPS.length - 1) {
-            state.activeIdx++;
+    function driveNext() {
+        if(app.activeIdx < CONFIG.stops.length - 1) {
+            app.activeIdx++;
             renderStops();
             playGong();
         }
@@ -449,59 +489,23 @@
     function playGong() {
         const g = document.getElementById('snd-gong');
         g.currentTime = 0;
-        g.play().catch(()=>{});
+        g.play().catch(() => {});
     }
 
-    function changeCat(btn, p) {
+    function setTicket(btn, p) {
         document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        state.price = p;
-        document.getElementById('val-price').innerText = p.toFixed(2).replace('.', ',') + " Kč";
+        app.price = p;
+        document.getElementById('v-price').innerText = p.toFixed(2).replace('.', ',') + " Kč";
     }
 
-    function sellTicket() {
-        alert("Jízdenka vytisknuta.");
+    function sell() {
+        alert("Lístek vytisknut: " + app.price + " Kč");
     }
 
-    function clearBuffer() {
-        console.log("Storno");
-    }
-
-    // --- MODÁL LINKA/SPOJ ---
-    function openInput(t) {
-        state.target = t;
-        state.buffer = "";
-        document.getElementById('modal-title').innerText = t === 'line' ? "Zadejte Linku" : "Zadejte Spoj";
-        document.getElementById('modal-val').innerText = "_";
-        document.getElementById('modal').style.display = 'flex';
-    }
-
-    function modType(n) {
-        state.buffer += n;
-        document.getElementById('modal-val').innerText = state.buffer;
-    }
-
-    function modClear() {
-        state.buffer = "";
-        document.getElementById('modal-val').innerText = "_";
-    }
-
-    function modConfirm() {
-        if(state.target === 'line') state.line = state.buffer;
-        else state.spoj = state.buffer;
-        
-        document.getElementById('txt-line-info').innerText = `Jízda: ${state.line} / ${state.spoj}`;
-        const inputs = document.querySelectorAll('.input-value');
-        if(state.target === 'line') inputs[0].innerText = state.line;
-        else inputs[1].innerText = state.spoj;
-
-        document.getElementById('modal').style.display = 'none';
-    }
-
-    function updateDisplay() {
-        document.getElementById('txt-line-info').innerText = `Jízda: ${state.line} / ${state.spoj}`;
+    function storno() {
+        console.log("Storno akce");
     }
 </script>
-
 </body>
 </html>
