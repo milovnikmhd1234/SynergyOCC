@@ -2,23 +2,25 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Synergy OCC - Autentický Simulátor v3.5</title>
+    <title>Synergy OCC - Professional Simulator v4.0</title>
     <style>
+        /* CSS DEFINICE - KOMPLEXNÍ STYLING SYNERGY */
         :root {
             --syn-blue: #004b93;
-            --syn-dark: #1a1a1a;
-            --syn-lcd: #e0e0e0;
+            --syn-dark-blue: #002d5a;
+            --syn-light-blue: #00a4e4;
             --syn-orange: #f39200;
+            --syn-yellow: #ffcc00;
             --syn-green: #4db748;
             --syn-red: #cc0000;
-            --syn-yellow: #ffcc00;
-            --syn-btn: #00a4e4;
+            --lcd-bg: #d9d9d9;
+            --text-dark: #222;
         }
 
         body {
-            background: #050505;
+            background: #0a0a0a;
             color: #fff;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,77 +30,87 @@
             user-select: none;
         }
 
-        /* HLAVNÍ ŠASI */
-        #device-frame {
-            width: 1080px;
+        /* HLAVNÍ ŠASI ZAŘÍZENÍ */
+        #occ-frame {
+            width: 1100px;
             height: 650px;
             background: var(--syn-blue);
-            border-radius: 40px;
-            padding: 25px;
+            border-radius: 35px;
+            padding: 30px;
             position: relative;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 50px 100px rgba(0,0,0,0.9);
-            border: 10px solid #003366;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.7), 0 40px 80px rgba(0,0,0,0.9);
+            border: 10px solid #003a70;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* HW TLAČÍTKA NA RÁMU (F1-F7) */
-        .hw-side-btns {
+        /* POSTRANNÍ TLAČÍTKA F1-F7 (DEKORATIVNÍ) */
+        .side-buttons-left {
             position: absolute;
-            left: 8px;
+            left: 5px;
             top: 100px;
             display: flex;
             flex-direction: column;
-            gap: 18px;
+            gap: 20px;
+        }
+        .side-buttons-right {
+            position: absolute;
+            right: 5px;
+            top: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         .hw-btn {
             width: 35px;
             height: 25px;
             background: #222;
+            border-radius: 4px;
             border: 1px solid #444;
             color: #666;
             font-size: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            border-radius: 4px;
         }
 
-        /* DISPLEJ */
-        #display {
+        /* DISPLEJ KASY */
+        #screen-container {
             width: 100%;
             height: 100%;
             background: #000;
+            border: 5px solid #111;
             border-radius: 8px;
             position: relative;
             overflow: hidden;
-            border: 5px solid #111;
         }
 
-        /* VYPNUTÝ STAV / BOOT */
-        #blackout {
+        /* BOOT SCREEN */
+        #boot-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
-            z-index: 10000;
+            z-index: 1000;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding-left: 60px;
+            padding-left: 50px;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 16px;
         }
 
-        /* ZÁKLADNÍ UI LAYOUT */
-        .ui-container {
+        /* UI STRUKTURA */
+        .ui-view {
             display: none;
             flex-direction: column;
             height: 100%;
-            background: var(--syn-lcd);
-            color: #222;
+            background: var(--lcd-bg);
+            color: var(--text-dark);
         }
 
-        /* LIŠTA (TOP BAR) */
-        .top-bar {
+        /* HORNÍ LIŠTA */
+        .top-header {
             height: 45px;
             background: #000;
             color: #fff;
@@ -107,38 +119,42 @@
             align-items: center;
             padding: 0 20px;
             font-weight: bold;
+            font-size: 18px;
         }
 
         .delay-tag {
             padding: 2px 15px;
             border-radius: 5px;
-            font-size: 20px;
+            font-size: 22px;
         }
-        .delay-ok { background: #555; }
-        .delay-late { background: var(--syn-green); }
-        .delay-early { background: var(--syn-red); } /* Předjetí je v Synergy nepřípustné */
+        .delay-red { background: var(--syn-red); }
+        .delay-grey { background: #555; }
 
-        /* HLAVNÍ PLOCHA JÍZDY */
-        .work-grid {
+        /* HLAVNÍ PLOCHA */
+        .main-workspace {
             flex: 1;
             display: grid;
             grid-template-columns: 1fr 320px;
-            background: #bbb;
             gap: 2px;
+            background: #777;
             overflow: hidden;
         }
 
-        /* SEZNAM ZASTÁVEK (LEVÁ STRANA) */
-        .itinerary-scroll {
+        /* LEVÝ PANEL - ZASTÁVKY */
+        .itinerary {
             background: #fff;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
+
         .stop-row {
             display: grid;
-            grid-template-columns: 80px 40px 1fr 60px;
+            grid-template-columns: 85px 45px 1fr;
             padding: 12px 15px;
             border-bottom: 1px solid #ddd;
-            font-size: 19px;
+            font-size: 20px;
             align-items: center;
         }
         .stop-row.active {
@@ -146,91 +162,112 @@
             color: #fff;
             font-weight: bold;
         }
-        .stop-row.passed { opacity: 0.5; }
+        .stop-row.next { background: #fff3e0; }
 
-        /* NUMERIKA A FUNKCE (PRAVÁ STRANA) */
-        .side-ctrl {
+        .price-label {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--syn-red);
+            text-shadow: 1px 1px 0 #fff;
+            z-index: 5;
+        }
+
+        /* PRAVÝ PANEL - NUMERIKA */
+        .numpad-grid {
             background: #ccc;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 4px;
             padding: 6px;
         }
-        .k-btn {
+
+        .key {
             background: var(--syn-blue);
             color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            border: 1px solid #003a70;
+            border: 1px solid #003366;
             cursor: pointer;
-            height: 65px;
+            height: 70px;
+            transition: background 0.1s;
         }
-        .k-btn:active { background: var(--syn-btn); }
-        .k-btn.gray { background: #555; font-size: 14px; }
-        .k-btn.orange { background: var(--syn-orange); }
-        .k-btn.green { background: var(--syn-green); }
+        .key:active { background: var(--syn-light-blue); }
+        .key.func { background: #555; font-size: 15px; color: #eee; }
+        .key.orange { background: var(--syn-orange); }
+        .key.green { background: var(--syn-green); }
+        .key.red { background: var(--syn-red); }
 
         /* SPODNÍ PANEL JÍZDENEK */
-        .ticket-dock {
-            height: 130px;
-            background: #444;
+        .ticket-panel {
+            height: 140px;
+            background: #333;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: 1fr 1fr;
             gap: 3px;
-            padding: 3px;
+            padding: 4px;
         }
+
         .t-btn {
-            background: var(--syn-btn);
+            background: var(--syn-light-blue);
             color: white;
             border: none;
             font-weight: bold;
             font-size: 14px;
-            text-transform: uppercase;
             cursor: pointer;
+            text-transform: uppercase;
         }
-        .t-btn.yellow { background: var(--syn-yellow); color: #000; }
-        .t-btn.red { background: var(--syn-red); }
+        .t-btn.active {
+            background: var(--syn-yellow);
+            color: #000;
+        }
+        .t-btn.esc { background: var(--syn-red); }
 
-        /* MODÁLNÍ OKNA (LOGIN, SETUP) */
-        .overlay-scr {
+        /* MODÁLY (LOGIN / SETUP) */
+        .modal-screen {
             display: none;
             width: 100%;
             height: 100%;
-            background: #111;
+            background: #1a1a1a;
             justify-content: center;
             align-items: center;
             flex-direction: column;
         }
-        .login-card {
+        .login-box {
             background: #333;
             padding: 40px;
-            border-radius: 15px;
+            border-radius: 20px;
             text-align: center;
-            width: 350px;
+            width: 380px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
-        .lcd-input {
+        .login-lcd {
             background: #000;
             color: var(--syn-green);
             font-family: monospace;
-            font-size: 35px;
+            font-size: 40px;
             padding: 15px;
             margin-bottom: 25px;
-            border: 1px solid #444;
+            border: 2px solid #444;
+            min-height: 50px;
         }
 
-        /* SETUP FORM */
-        #scr-setup { background: #eee; color: #000; padding: 40px; align-items: flex-start; overflow-y: auto; }
-        .setup-field { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid var(--syn-blue); font-size: 18px; }
+        /* SETUP SCREEN */
+        #scr-setup { background: #f0f0f0; color: #000; padding: 50px; align-items: flex-start; }
+        .setup-input { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--syn-blue); font-size: 20px; }
 
         /* 🍄 POWER BUTTON */
-        #master-switch {
+        #power-trigger {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
+            bottom: 25px;
+            left: 25px;
             width: 70px;
             height: 70px;
             background: #222;
@@ -247,78 +284,89 @@
 </head>
 <body>
 
-<div id="device-frame">
-    <div class="hw-side-btns">
+<div id="occ-frame">
+    <div class="side-buttons-left">
         <div class="hw-btn">F1</div><div class="hw-btn">F2</div><div class="hw-btn">F3</div>
         <div class="hw-btn">F4</div><div class="hw-btn">F5</div><div class="hw-btn">F6</div><div class="hw-btn">F7</div>
     </div>
+    <div class="side-buttons-right">
+        <div class="hw-btn"></div><div class="hw-btn"></div><div class="hw-btn"></div>
+        <div class="hw-btn"></div><div class="hw-btn"></div><div class="hw-btn"></div><div class="hw-btn"></div>
+    </div>
 
-    <div id="master-switch" onclick="sys_powerToggle()">🍄</div>
+    <div id="power-trigger" onclick="sys_boot()">🍄</div>
 
-    <div id="display">
-        <div id="blackout">
-            <div id="boot-log" style="display:none">
-                > SYNERGY OS v3.5.22<br>
-                > INITIALIZING PERIPHERALS... OK<br>
-                > CONNECTING TO VDV-KA TERMINAL... OK<br>
-                > LOADING DRIVER_DB... [001, 002, 003]<br>
-                > SYSTEM READY.
+    <div id="screen-container">
+        <div id="boot-overlay">
+            <div id="boot-text" style="display:none">
+                SYNERGY OCC SYSTEM INITIALIZING...<br>
+                CHECKING VDV-KA MODULE... OK<br>
+                LOADING DATABASE: 1258 STOPS FOUND<br>
+                DRIVER LOGIN READY.
             </div>
         </div>
 
-        <div id="main-ui" class="ui-container">
-            <div class="top-bar">
-                <span id="ui-line-info">SYNERGY OCC</span>
-                <span id="ui-date">07.05.2026</span>
-                <div class="delay-tag delay-ok" id="ui-delay">0:00</div>
-                <span id="ui-clock">00:00:00</span>
+        <div id="ui-container" class="ui-view">
+            <div class="top-header">
+                <span id="header-status">Jízda</span>
+                <span id="header-date">07.05.2026</span>
+                <div class="delay-tag delay-red" id="header-delay">-13 m</div>
+                <span id="header-clock">04:22:00</span>
             </div>
 
-            <div id="scr-login" class="overlay-scr" style="display: flex;">
-                <div class="login-card">
-                    <div class="lcd-input" id="log-display">ID?</div>
-                    <div class="side-ctrl" style="grid-template-columns: repeat(3, 1fr);">
-                        <div class="k-btn" onclick="log_press(1)">1</div><div class="k-btn" onclick="log_press(2)">2</div><div class="k-btn" onclick="log_press(3)">3</div>
-                        <div class="k-btn" onclick="log_press(4)">4</div><div class="k-btn" onclick="log_press(5)">5</div><div class="k-btn" onclick="log_press(6)">6</div>
-                        <div class="k-btn" onclick="log_press(7)">7</div><div class="k-btn" onclick="log_press(8)">8</div><div class="k-btn" onclick="log_press(9)">9</div>
-                        <div class="k-btn red" onclick="log_clear()">C</div><div class="k-btn" onclick="log_press(0)">0</div><div class="k-btn green" onclick="log_enter()">OK</div>
+            <div id="scr-login" class="modal-screen" style="display: flex;">
+                <div class="login-box">
+                    <div class="login-lcd" id="login-display">ID?</div>
+                    <div class="numpad-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="key" onclick="login_add(1)">1</div><div class="key" onclick="login_add(2)">2</div><div class="key" onclick="login_add(3)">3</div>
+                        <div class="key" onclick="login_add(4)">4</div><div class="key" onclick="login_add(5)">5</div><div class="key" onclick="login_add(6)">6</div>
+                        <div class="key" onclick="login_add(7)">7</div><div class="key" onclick="login_add(8)">8</div><div class="key" onclick="login_add(9)">9</div>
+                        <div class="key red" onclick="login_clear()">C</div><div class="key" onclick="login_add(0)">0</div><div class="key green" onclick="login_confirm()">OK</div>
                     </div>
                 </div>
             </div>
 
-            <div id="scr-setup" class="overlay-scr">
-                <h1 style="color:var(--syn-blue)">NASTAVENÍ SLUŽBY</h1>
+            <div id="scr-setup" class="modal-screen">
+                <h1 style="margin:0 0 20px 0; color:var(--syn-blue)">KONFIGURACE LINKY</h1>
                 <label>Číslo linky / Směr:</label>
-                <input type="text" id="inp-line" class="setup-field" placeholder="např. 125 | Terminál">
-                <label>Zastávky a časy (formát: Název;Čas - každá na nový řádek):</label>
-                <textarea id="inp-stops" class="setup-field" rows="6" placeholder="Sídliště;12:00&#10;Škola;12:05&#10;Nádraží;12:12"></textarea>
-                <button class="k-btn green" style="width:100%; height:80px;" onclick="drive_init()">AKTIVOVAT SPOJ</button>
+                <input type="text" id="setup-line" class="setup-input" value="790968/2 | Moravské Budějovice">
+                <label>Seznam zastávek (oddělte čárkou):</label>
+                <textarea id="setup-stops" class="setup-input" rows="5">Studená,,ul.1.máje, Studená,,H.Bolíko,roz, Mrákotín, Krahulčí, Telč,,aut.nádr., Telč,,Interiér, Dyjice,Dolní Dvorce</textarea>
+                <button class="key green" style="width: 100%; height: 80px; margin-top: 20px;" onclick="drive_start()">ZAHÁJIT JÍZDU</button>
             </div>
 
-            <div id="scr-drive" class="overlay-scr">
-                <div class="work-grid">
-                    <div class="itinerary-scroll" id="stop-container">
+            <div id="scr-drive" class="modal-screen">
+                <div class="main-workspace">
+                    <div class="itinerary" id="stop-list">
                         </div>
-                    <div class="side-ctrl">
-                        <div class="k-btn gray">Přestup</div><div class="k-btn">7</div><div class="k-btn">8</div><div class="k-btn">9</div>
-                        <div class="k-btn gray">Multi.</div><div class="k-btn">4</div><div class="k-btn">5</div><div class="k-btn">6</div>
-                        <div class="k-btn gray">Karta</div><div class="k-btn">1</div><div class="k-btn">2</div><div class="k-btn">3</div>
-                        <div class="k-btn red">Storno</div><div class="k-btn">.</div><div class="k-btn">0</div><div class="k-btn">±</div>
-                        <div class="k-btn orange" style="grid-column: span 2" onclick="drive_next()">DALŠÍ</div>
-                        <div class="k-btn green" style="grid-column: span 2" onclick="sys_gong()">GONG</div>
+                    
+                    <div class="numpad-grid">
+                        <div class="key func">Přestup</div><div class="key">7</div><div class="key">8</div><div class="key">9</div>
+                        <div class="key func">Multi.</div><div class="key">4</div><div class="key">5</div><div class="key">6</div>
+                        <div class="key func">Karta</div><div class="key">1</div><div class="key">2</div><div class="key">3</div>
+                        <div class="key func" onclick="drive_clearBuffer()">Storno</div><div class="key">.</div><div class="key">0</div><div class="key">±</div>
+                        
+                        <div class="key orange" style="grid-column: span 2" onclick="drive_nextStop()">DALŠÍ</div>
+                        <div class="key green" style="grid-column: span 2" onclick="drive_sell()">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
                     </div>
+
+                    <div class="price-label" id="main-price">11,00 Kč</div>
                 </div>
-                <div class="ticket-dock">
-                    <button class="t-btn yellow">Základní</button>
-                    <button class="t-btn">Dítě</button>
-                    <button class="t-btn">Student</button>
-                    <button class="t-btn">Osoba 65</button>
-                    <button class="t-btn">ZTP</button>
-                    <button class="t-btn">Pes</button>
-                    <button class="t-btn">Dítě do</button>
-                    <button class="t-btn">NavUstav</button>
-                    <button class="t-btn">Inv3st.</button>
-                    <button class="t-btn red" onclick="sys_logout()">ESC / KONEC</button>
+
+                <div class="ticket-panel">
+                    <button class="t-btn active" onclick="ticket_select(this, 11)">Základní</button>
+                    <button class="t-btn" onclick="ticket_select(this, 5)">Dítě</button>
+                    <button class="t-btn" onclick="ticket_select(this, 8)">Student</button>
+                    <button class="t-btn" onclick="ticket_select(this, 8)">Osoba 65</button>
+                    <button class="t-btn" onclick="ticket_select(this, 0)">ZTP</button>
+                    
+                    <button class="t-btn" onclick="ticket_select(this, 7)">Pes</button>
+                    <button class="t-btn" onclick="ticket_select(this, 0)">Dítě do</button>
+                    <button class="t-btn" onclick="ticket_select(this, 0)">NavUstav</button>
+                    <button class="t-btn" onclick="ticket_select(this, 0)">Inv3st.</button>
+                    <button class="t-btn esc" onclick="sys_logout()">ESC / KONEC</button>
                 </div>
             </div>
         </div>
@@ -328,151 +376,188 @@
 <audio id="audio-gong" src="gong.mp3" preload="auto"></audio>
 
 <script>
-    // --- DATABÁZE A STAV ---
-    const DB_DRIVERS = {
-        "001": { pin: "0000", name: "Test" },
-        "002": { pin: "3508", name: "Petr Solaris" },
-        "003": { pin: "9910", name: "Host" }
-    };
-
-    let state = {
+    // --- KONFIGURACE A DATA ---
+    const DRIVERS = { "10342": { pin: "3508", name: "Moravský Emhádečkář" } };
+    
+    let appState = {
         power: false,
         driver: null,
-        logStep: 'id',
+        loginStep: 'id',
         buffer: '',
         stops: [],
         activeIdx: 0,
-        delay: 0
+        delay: -13,
+        currentPrice: 11,
+        audioUnlocked: false
     };
 
     // --- SYSTÉMOVÉ FUNKCE ---
-    function sys_powerToggle() {
-        const blk = document.getElementById('blackout');
-        const log = document.getElementById('boot-log');
-        const ui = document.getElementById('main-ui');
+    function sys_boot() {
+        if(appState.power) { location.reload(); return; }
+        
+        const overlay = document.getElementById('boot-overlay');
+        const text = document.getElementById('boot-text');
+        
+        text.style.display = "block";
+        // Unlock audio on first interaction
+        sys_unlockAudio();
 
-        if (!state.power) {
-            log.style.display = "block";
-            // ODEMKNUTÍ AUDIA (Důležité pro prohlížeč!)
-            document.getElementById('audio-gong').play().catch(() => {}); 
-            
+        setTimeout(() => {
+            overlay.style.opacity = "0";
             setTimeout(() => {
-                blk.style.opacity = "0";
-                setTimeout(() => {
-                    blk.style.display = "none";
-                    ui.style.display = "flex";
-                    state.power = true;
-                }, 500);
-            }, 2500);
-        } else {
-            location.reload();
-        }
+                overlay.style.display = "none";
+                document.getElementById('ui-container').style.display = "flex";
+                appState.power = true;
+            }, 600);
+        }, 2200);
     }
 
-    function sys_gong() {
-        const g = document.getElementById('audio-gong');
-        g.currentTime = 0;
-        g.play().catch(e => console.error("Chyba gongu:", e));
+    function sys_unlockAudio() {
+        const audio = document.getElementById('audio-gong');
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+            appState.audioUnlocked = true;
+        }).catch(() => {});
+    }
+
+    function sys_playGong() {
+        const audio = document.getElementById('audio-gong');
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log("Gong failed", e));
     }
 
     function sys_logout() {
-        if(confirm("Ukončit službu a odhlásit?")) location.reload();
+        if(confirm("Opravdu ukončit službu?")) location.reload();
     }
 
-    // --- LOGIN ---
-    function log_press(n) {
-        state.buffer += n;
-        const disp = document.getElementById('log-display');
-        disp.innerText = (state.logStep === 'id') ? state.buffer : "*".repeat(state.buffer.length);
+    // --- LOGIN LOGIKA ---
+    function login_add(n) {
+        appState.buffer += n;
+        const disp = document.getElementById('login-display');
+        disp.innerText = (appState.loginStep === 'id') ? appState.buffer : "*".repeat(appState.buffer.length);
     }
 
-    function log_clear() {
-        state.buffer = '';
-        document.getElementById('log-display').innerText = (state.logStep === 'id') ? "ID?" : "PIN?";
+    function login_clear() {
+        appState.buffer = '';
+        document.getElementById('login-display').innerText = (appState.loginStep === 'id') ? "ID?" : "PIN?";
     }
 
-    function log_enter() {
-        if (state.logStep === 'id') {
-            if (DB_DRIVERS[state.buffer]) {
-                state.driver = state.buffer;
-                state.buffer = '';
-                state.logStep = 'pin';
-                document.getElementById('log-display').innerText = "PIN?";
+    function login_confirm() {
+        if(appState.loginStep === 'id') {
+            if(DRIVERS[appState.buffer]) {
+                appState.driver = appState.buffer;
+                appState.buffer = '';
+                appState.loginStep = 'pin';
+                document.getElementById('login-display').innerText = "PIN?";
             } else {
-                alert("Neznámý řidič!");
-                log_clear();
+                alert("Neznámý řidič!"); login_clear();
             }
         } else {
-            if (DB_DRIVERS[state.driver].pin === state.buffer) {
-                document.getElementById('ui-line-info').innerText = "Řidič: " + DB_DRIVERS[state.driver].name;
-                scr_switch('scr-setup');
+            if(DRIVERS[appState.driver].pin === appState.buffer) {
+                document.getElementById('header-status').innerText = "Řidič: " + DRIVERS[appState.driver].name;
+                scr_show('scr-setup');
             } else {
-                alert("Chybný PIN!");
-                log_clear();
+                alert("Chybný PIN!"); login_clear();
             }
         }
     }
 
-    // --- SETUP A JÍZDA ---
-    function drive_init() {
-        const line = document.getElementById('inp-line').value;
-        const raw = document.getElementById('inp-stops').value.split('\n');
+    // --- DRIVE & JÍZDENKY ---
+    function drive_start() {
+        const line = document.getElementById('setup-line').value;
+        const stopsRaw = document.getElementById('setup-stops').value.split(',');
         
-        if(!line || raw.length < 1) return alert("Vyplňte data!");
-
-        state.stops = raw.map(line => {
-            const parts = line.split(';');
-            return { name: parts[0] || "Zastávka", time: parts[1] || "--:--" };
-        });
-
-        state.activeIdx = 0;
-        document.getElementById('ui-line-info').innerText = "Linka: " + line;
-        drive_render();
-        scr_switch('scr-drive');
+        appState.stops = stopsRaw.map(s => s.trim());
+        appState.activeIdx = 0;
+        
+        document.getElementById('header-status').innerText = "Jízda: " + line;
+        drive_renderStops();
+        scr_show('scr-drive');
     }
 
-    function drive_render() {
-        const container = document.getElementById('stop-container');
-        container.innerHTML = '';
+    function drive_renderStops() {
+        const list = document.getElementById('stop-list');
+        list.innerHTML = '';
+        
+        appState.stops.forEach((name, i) => {
+            const row = document.createElement('div');
+            row.className = `stop-row ${i === appState.activeIdx ? 'active' : ''}`;
+            
+            // Generování času
+            let h = 4, m = 35 + (i*4);
+            if(m >= 60) { h++; m -= 60; }
+            let timeStr = `0${h}:${m < 10 ? '0'+m : m}`;
 
-        state.stops.forEach((s, i) => {
-            const div = document.createElement('div');
-            div.className = `stop-row ${i === state.activeIdx ? 'active' : ''} ${i < state.activeIdx ? 'passed' : ''}`;
-            div.innerHTML = `
-                <div style="font-weight:bold">${s.time}</div>
-                <div style="color:#888; font-size:12px">21 |</div>
-                <div>${s.name}</div>
-                <div style="text-align:right"><small>↑</small></div>
+            row.innerHTML = `
+                <div>${timeStr}</div>
+                <div style="color:#999; font-size:14px">${25-i} | 1|</div>
+                <div>${name}</div>
             `;
-            container.appendChild(div);
+            list.appendChild(row);
         });
 
-        // Simulace zpoždění
-        const dEl = document.getElementById('ui-delay');
-        dEl.innerText = (state.delay >= 0 ? '+' : '') + state.delay + ":00";
-        dEl.className = `delay-tag ${state.delay > 0 ? 'delay-late' : (state.delay < 0 ? 'delay-early' : 'delay-ok')}`;
+        // Auto scroll k aktivní zastávce
+        const activeRow = list.querySelector('.active');
+        if(activeRow) activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function drive_next() {
-        if(state.activeIdx < state.stops.length - 1) {
-            state.activeIdx++;
-            state.delay += Math.floor(Math.random() * 2);
-            sys_gong();
-            drive_render();
-        } else {
-            alert("Konečná stanice!");
+    function drive_nextStop() {
+        if(appState.activeIdx < appState.stops.length - 1) {
+            appState.activeIdx++;
+            appState.delay += Math.floor(Math.random() * 3);
+            sys_playGong();
+            drive_renderStops();
+            drive_updateDelay();
         }
+    }
+
+    function drive_updateDelay() {
+        const el = document.getElementById('header-delay');
+        el.innerText = (appState.delay > 0 ? '+' : '') + appState.delay + " m";
+        el.className = `delay-tag ${appState.delay > 0 ? 'delay-grey' : 'delay-red'}`;
+    }
+
+    function ticket_select(btn, price) {
+        // Změna vizuálu tlačítek
+        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Aktualizace ceny
+        appState.currentPrice = price;
+        document.getElementById('main-price').innerText = price.toFixed(2).replace('.', ',') + " Kč";
+        
+        // Zvukový feedback
+        if(!appState.audioUnlocked) sys_unlockAudio();
+    }
+
+    function drive_sell() {
+        // Simulace prodeje
+        const price = appState.currentPrice;
+        if(price === 0) {
+            alert("Bezplatná jízdenka vytisknuta.");
+        } else {
+            const ok = confirm(`Prodat jízdenku za ${price},00 Kč?`);
+            if(ok) console.log("Ticket printed");
+        }
+    }
+
+    function drive_clearBuffer() {
+        console.log("Buffer cleared");
     }
 
     // --- POMOCNÉ ---
-    function scr_switch(id) {
-        document.querySelectorAll('.overlay-scr').forEach(s => s.style.display = 'none');
+    function scr_show(id) {
+        document.querySelectorAll('.modal-screen').forEach(s => s.style.display = 'none');
         document.getElementById(id).style.display = 'flex';
     }
 
+    // Hodiny
     setInterval(() => {
-        document.getElementById('ui-clock').innerText = new Date().toLocaleTimeString('cs-CZ');
+        const now = new Date();
+        document.getElementById('header-clock').innerText = now.toLocaleTimeString('cs-CZ', {hour12: false});
     }, 1000);
+
 </script>
 
 </body>
