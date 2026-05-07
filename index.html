@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synergy OCC - Full Simulator v5.0</title>
+    <title>Synergy OCC - Professional Edition</title>
     <style>
-        /* CSS DEFINICE - DESIGN SYNERGY */
+        /* CSS DEFINICE - KOMPLETNÍ STYLING */
         :root {
             --syn-blue: #004b93;
-            --syn-dark-blue: #002d5a;
-            --syn-light-blue: #00a4e4;
+            --syn-dark: #011d3a;
             --syn-orange: #f39200;
             --syn-yellow: #ffcc00;
             --syn-green: #4db748;
             --syn-red: #cc0000;
-            --lcd-bg: #1a1a1a;
-            --stop-bg: #ffffff;
+            --syn-light-blue: #00a4e4;
+            --lcd-white: #ffffff;
+            --lcd-grey: #e0e0e0;
         }
 
         body {
-            background: #050505;
+            background: #0a0a0a;
             color: #fff;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -31,543 +31,476 @@
             user-select: none;
         }
 
-        /* HLAVNÍ ŠASI ZAŘÍZENÍ */
-        #device-frame {
-            width: 1150px;
-            height: 680px;
+        /* HLAVNÍ RÁM ZAŘÍZENÍ - KOMPAKTNÍ VELIKOST */
+        #occ-frame {
+            width: 980px;
+            height: 600px;
             background: var(--syn-blue);
-            border-radius: 40px;
-            padding: 25px;
+            border-radius: 30px;
+            padding: 20px;
             position: relative;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 50px 100px rgba(0,0,0,0.9);
-            border: 12px solid #003366;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 30px 60px rgba(0,0,0,0.9);
+            border: 10px solid #00264d;
             display: flex;
             flex-direction: column;
-        }
-
-        /* FYZICKÁ TLAČÍTKA F1-F7 */
-        .hw-buttons-side {
-            position: absolute;
-            left: 8px;
-            top: 100px;
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-        .hw-btn {
-            width: 40px;
-            height: 28px;
-            background: #222;
-            border-radius: 5px;
-            border: 1px solid #444;
-            color: #555;
-            font-size: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         /* DISPLEJ */
-        #display-main {
+        #screen {
             width: 100%;
             height: 100%;
             background: #000;
-            border: 6px solid #111;
-            border-radius: 10px;
+            border-radius: 8px;
             position: relative;
             overflow: hidden;
+            border: 4px solid #111;
         }
 
-        /* BOOT SCREEN */
-        #boot-screen {
+        /* BOOT SCREEN - 14 AKCÍ */
+        #boot-layer {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding-left: 60px;
+            padding: 40px;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none; /* Zapne se přes JS */
         }
 
-        /* UI STRUKTURA */
-        .synergy-ui {
+        /* HLAVNÍ UI */
+        .ui-root {
             display: none;
             flex-direction: column;
             height: 100%;
             background: #000;
         }
 
-        /* LIŠTA (TOP BAR) */
-        .status-bar {
-            height: 45px;
+        /* TOP BAR */
+        .header {
+            height: 40px;
             background: #000;
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0 15px;
-            font-weight: bold;
             font-size: 16px;
-            border-bottom: 2px solid #333;
+            font-weight: bold;
+            border-bottom: 2px solid #222;
         }
 
-        .delay-indicator {
+        .delay-tag {
             padding: 2px 12px;
             border-radius: 4px;
             font-size: 20px;
-            min-width: 80px;
+            min-width: 70px;
             text-align: center;
         }
-        .delay-late { background: var(--syn-red); color: white; }
-        .delay-early { background: #555; color: white; }
+        .delay-late { background: var(--syn-red); color: #fff; }
+        .delay-ok { background: #444; color: #fff; }
 
         /* PRACOVNÍ PLOCHA */
-        .workspace {
+        .main-grid {
             flex: 1;
             display: grid;
-            grid-template-columns: 80px 1fr 340px;
+            grid-template-columns: 85px 1fr 300px;
             background: #333;
             gap: 2px;
             overflow: hidden;
         }
 
-        /* LEVÝ PANEL (VSTUP LINKA/SPOJ) */
-        .input-sidebar {
+        /* LEVÝ PANEL (VSTUPY LINKA/SPOJ) */
+        .side-inputs {
             background: #111;
             display: flex;
             flex-direction: column;
-            padding: 5px;
+            padding: 10px 5px;
             gap: 10px;
-            border-right: 2px solid #000;
         }
-        .side-input-box {
+        .input-label { font-size: 10px; color: #777; text-align: center; text-transform: uppercase; }
+        .input-value {
             background: #222;
             border: 1px solid var(--syn-light-blue);
             color: var(--syn-yellow);
             text-align: center;
-            padding: 10px 2px;
-            font-size: 14px;
+            padding: 8px 0;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
         }
-        .side-input-label {
-            font-size: 10px;
-            color: #888;
-            text-align: center;
-            text-transform: uppercase;
-        }
 
-        /* STŘEDNÍ PANEL (ZASTÁVKY) */
-        .stop-scroller {
-            background: var(--stop-bg);
-            overflow-y: auto;
+        /* STŘEDNÍ PANEL (ITINERÁŘ) */
+        .itinerary {
+            background: var(--lcd-white);
             color: #000;
+            overflow-y: auto;
             position: relative;
         }
-        .stop-entry {
+        .stop-item {
             display: grid;
-            grid-template-columns: 80px 40px 1fr;
-            padding: 12px;
+            grid-template-columns: 75px 40px 1fr;
+            padding: 10px 15px;
             border-bottom: 1px solid #ddd;
-            font-size: 20px;
+            font-size: 18px;
             align-items: center;
         }
-        .stop-entry.active {
+        .stop-item.active {
             background: var(--syn-orange);
-            color: white;
+            color: #fff;
             font-weight: bold;
         }
-        .stop-entry.passed { opacity: 0.5; }
 
-        .price-overlay {
+        .floating-price {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 52px;
-            font-weight: bold;
+            font-size: 50px;
+            font-weight: 900;
             color: var(--syn-red);
             text-shadow: 2px 2px 0 #fff;
-            z-index: 10;
+            z-index: 100;
         }
 
         /* PRAVÝ PANEL (NUMERIKA) */
-        .keypad-grid {
-            background: #aaa;
+        .keypad {
+            background: #bbb;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 3px;
-            padding: 5px;
+            gap: 2px;
+            padding: 4px;
         }
-        .key-unit {
+        .k-btn {
             background: var(--syn-blue);
-            color: white;
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             border: 1px solid #002d5a;
             cursor: pointer;
-            height: 75px;
+            height: 65px;
         }
-        .key-unit:active { background: var(--syn-light-blue); }
-        .key-unit.grey { background: #555; font-size: 15px; }
-        .key-unit.orange { background: var(--syn-orange); }
-        .key-unit.green { background: var(--syn-green); }
+        .k-btn:active { background: var(--syn-light-blue); }
+        .k-btn.f { background: #555; font-size: 14px; }
+        .k-btn.orange { background: var(--syn-orange); }
+        .k-btn.green { background: var(--syn-green); }
 
         /* SPODNÍ PANEL (JÍZDENKY) */
-        .ticket-bar {
-            height: 140px;
+        .ticket-panel {
+            height: 120px;
             background: #222;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: 1fr 1fr;
-            gap: 3px;
-            padding: 5px;
+            gap: 2px;
+            padding: 4px;
         }
-        .ticket-key {
+        .t-btn {
             background: var(--syn-light-blue);
-            color: white;
+            color: #fff;
             border: none;
+            font-size: 13px;
             font-weight: bold;
-            font-size: 15px;
             cursor: pointer;
             text-transform: uppercase;
         }
-        .ticket-key.selected {
-            background: var(--syn-yellow);
-            color: #000;
-        }
-        .ticket-key.red { background: var(--syn-red); }
-
-        /* MODÁLY */
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 500;
-        }
-        .modal-content {
-            background: #333;
-            padding: 30px;
-            border-radius: 15px;
-            width: 400px;
-            text-align: center;
-        }
-        .modal-input {
-            width: 80%;
-            padding: 15px;
-            font-size: 30px;
-            margin: 20px 0;
-            background: #000;
-            color: var(--syn-green);
-            border: 2px solid #555;
-            text-align: center;
-        }
+        .t-btn.selected { background: var(--syn-yellow); color: #000; }
+        .t-btn.red { background: var(--syn-red); }
 
         /* 🍄 POWER BUTTON */
-        #mushroom-power {
+        #pwr-btn {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 75px;
-            height: 75px;
+            bottom: 25px;
+            left: 25px;
+            width: 60px;
+            height: 60px;
             background: #333;
-            border: 5px solid #555;
+            border: 4px solid #555;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 40px;
+            font-size: 30px;
             cursor: pointer;
-            z-index: 10001;
-            transition: transform 0.1s;
+            z-index: 2000;
+            transition: 0.2s;
         }
-        #mushroom-power:active { transform: scale(0.9); }
+        #pwr-btn:hover { background: #444; }
+
+        /* MODÁL PRO ZADÁVÁNÍ */
+        #modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+        }
+        .modal-box {
+            background: #333;
+            padding: 25px;
+            border-radius: 15px;
+            width: 320px;
+            text-align: center;
+        }
+        .modal-display {
+            background: #000;
+            color: var(--syn-green);
+            font-family: monospace;
+            font-size: 32px;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #555;
+        }
     </style>
 </head>
 <body>
 
-<div id="device-frame">
-    <div class="hw-buttons-side">
-        <div class="hw-btn">F1</div><div class="hw-btn">F2</div><div class="hw-btn">F3</div>
-        <div class="hw-btn">F4</div><div class="hw-btn">F5</div><div class="hw-btn">F6</div><div class="hw-btn">F7</div>
-    </div>
+<div id="occ-frame">
+    <div id="pwr-btn" onclick="startSystem()">🍄</div>
 
-    <div id="mushroom-power" onclick="sys_togglePower()">🍄</div>
+    <div id="screen">
+        <div id="boot-layer"></div>
 
-    <div id="display-main">
-        <div id="boot-screen">
-            <div id="boot-logs" style="display:none">
-                SYNERGY OS v5.0.24 INITIALIZING...<br>
-                CHECKING PERIPHERALS... OK<br>
-                LOADING STOP_DATABASE... 14502 ITEMS<br>
-                CONNECTING TO DISPATCH... OK<br>
-                SYSTEM READY.
-            </div>
-        </div>
-
-        <div id="main-ui" class="synergy-ui">
-            <div class="status-bar">
-                <span id="ui-run-info">Jízda: ---</span>
-                <span id="ui-date">07.05.2026</span>
-                <div class="delay-indicator delay-early" id="ui-delay">+0 m</div>
-                <span id="ui-clock">00:00:00</span>
+        <div id="app-ui" class="ui-root">
+            <div class="header">
+                <span id="txt-line-info">Jízda: 790968 / 2</span>
+                <span>07.05.2026</span>
+                <div id="val-delay" class="delay-tag delay-ok">+0 m</div>
+                <span id="val-clock">00:00:00</span>
             </div>
 
-            <div class="workspace">
-                <div class="input-sidebar">
-                    <div class="side-input-label">Linka</div>
-                    <div class="side-input-box" onclick="ui_openNumModal('linka')">790968</div>
-                    <div class="side-input-label">Spoj</div>
-                    <div class="side-input-box" onclick="ui_openNumModal('spoj')">2</div>
+            <div class="main-grid">
+                <div class="side-inputs">
+                    <div class="input-label">Linka</div>
+                    <div class="input-value" onclick="openInput('line')">790968</div>
+                    <div class="input-label">Spoj</div>
+                    <div class="input-value" onclick="openInput('spoj')">2</div>
                     <div style="flex:1"></div>
-                    <div class="side-input-box grey" style="color:white; font-size:10px" onclick="sys_reset()">RESET</div>
+                    <div class="input-value f" style="color:white" onclick="location.reload()">RESET</div>
                 </div>
 
-                <div class="stop-scroller" id="stop-list-container">
+                <div class="itinerary" id="stop-container">
                     </div>
 
-                <div class="keypad-grid">
-                    <div class="key-unit grey">Přestup</div><div class="key-unit">7</div><div class="key-unit">8</div><div class="key-unit">9</div>
-                    <div class="key-unit grey">Multi.</div><div class="key-unit">4</div><div class="key-unit">5</div><div class="key-unit">6</div>
-                    <div class="key-unit grey">Karta</div><div class="key-unit">1</div><div class="key-unit">2</div><div class="key-unit">3</div>
-                    <div class="key-unit grey" onclick="ticket_clear()">Storno</div><div class="key-unit">.</div><div class="key-unit">0</div><div class="key-unit">±</div>
-                    
-                    <div class="key-unit orange" style="grid-column: span 2" onclick="drive_nextStop()">DALŠÍ</div>
-                    <div class="key-unit green" style="grid-column: span 2" onclick="drive_confirmSale()">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <div class="keypad">
+                    <div class="k-btn f">Přestup</div><div class="k-btn">7</div><div class="k-btn">8</div><div class="k-btn">9</div>
+                    <div class="k-btn f">Multi.</div><div class="k-btn">4</div><div class="k-btn">5</div><div class="k-btn">6</div>
+                    <div class="k-btn f">Karta</div><div class="k-btn">1</div><div class="k-btn">2</div><div class="k-btn">3</div>
+                    <div class="k-btn f" onclick="clearBuffer()">Storno</div><div class="k-btn">.</div><div class="k-btn">0</div><div class="k-btn">±</div>
+                    <div class="k-btn orange" style="grid-column: span 2" onclick="nextStop()">DALŠÍ</div>
+                    <div class="k-btn green" style="grid-column: span 2" onclick="sellTicket()">
+                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </div>
                 </div>
 
-                <div class="price-overlay" id="ui-price-disp">11,00 Kč</div>
+                <div class="floating-price" id="val-price">11,00 Kč</div>
             </div>
 
-            <div class="ticket-bar">
-                <button class="ticket-key selected" onclick="ticket_setCategory(this, 11)">Základní</button>
-                <button class="ticket-key" onclick="ticket_setCategory(this, 5)">Dítě</button>
-                <button class="ticket-key" onclick="ticket_setCategory(this, 8)">Student</button>
-                <button class="ticket-key" onclick="ticket_setCategory(this, 8)">Osoba 65</button>
-                <button class="ticket-key" onclick="ticket_setCategory(this, 0)">ZTP</button>
-                
-                <button class="ticket-key" onclick="ticket_setCategory(this, 7)">Pes</button>
-                <button class="ticket-key" onclick="ticket_setCategory(this, 0)">Dítě do</button>
-                <button class="ticket-key" onclick="ticket_setCategory(this, 0)">NavUstav</button>
-                <button class="ticket-key" onclick="ticket_setCategory(this, 0)">Inv3st.</button>
-                <button class="ticket-key red" onclick="sys_logout()">ESC / KONEC</button>
+            <div class="ticket-panel">
+                <button class="t-btn selected" onclick="changeCat(this, 11)">Základní</button>
+                <button class="t-btn" onclick="changeCat(this, 5)">Dítě</button>
+                <button class="t-btn" onclick="changeCat(this, 8)">Student</button>
+                <button class="t-btn" onclick="changeCat(this, 8)">Osoba 65</button>
+                <button class="t-btn" onclick="changeCat(this, 0)">ZTP</button>
+                <button class="t-btn" onclick="changeCat(this, 7)">Pes</button>
+                <button class="t-btn" onclick="changeCat(this, 0)">Dítě do</button>
+                <button class="t-btn" onclick="changeCat(this, 0)">NavUstav</button>
+                <button class="t-btn" onclick="changeCat(this, 0)">Inv3st.</button>
+                <button class="t-btn red" onclick="location.reload()">ESC / KONEC</button>
             </div>
         </div>
 
-        <div id="modal-num" class="modal-overlay">
-            <div class="modal-content">
-                <h2 id="modal-title" style="color:white">Zadejte hodnotu</h2>
-                <input type="text" id="modal-input-field" class="modal-input">
-                <div style="display:flex; gap:10px">
-                    <button class="key-unit red" style="flex:1" onclick="ui_closeModal()">Zrušit</button>
-                    <button class="key-unit green" style="flex:1" onclick="ui_confirmModal()">Potvrdit</button>
+        <div id="modal">
+            <div class="modal-box">
+                <h3 id="modal-title" style="color:#fff; margin-top:0">Zadejte hodnotu</h3>
+                <div class="modal-display" id="modal-val">---</div>
+                <div class="keypad" style="grid-template-columns: repeat(3, 1fr); background:transparent">
+                    <div class="k-btn" onclick="modType(1)">1</div><div class="k-btn" onclick="modType(2)">2</div><div class="k-btn" onclick="modType(3)">3</div>
+                    <div class="k-btn" onclick="modType(4)">4</div><div class="k-btn" onclick="modType(5)">5</div><div class="k-btn" onclick="modType(6)">6</div>
+                    <div class="k-btn" onclick="modType(7)">7</div><div class="k-btn" onclick="modType(8)">8</div><div class="k-btn" onclick="modType(9)">9</div>
+                    <div class="k-btn red" onclick="modClear()">C</div><div class="k-btn" onclick="modType(0)">0</div><div class="k-btn green" onclick="modConfirm()">OK</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<audio id="audio-gong" src="gong.mp3" preload="auto"></audio>
+<audio id="snd-gong" src="gong.mp3" preload="auto"></audio>
 
 <script>
-    // --- DATABÁZE A STAV ---
-    const STOPS_DB = [
-        { name: "Studená,,ul.1.máje a", time: "19:35", offset: 0 },
-        { name: "Studená,,H.Bolíko,roz", time: "19:38", offset: 3 },
-        { name: "Mrákotín", time: "19:45", offset: 10 },
-        { name: "Krahulčí", time: "19:49", offset: 14 },
-        { name: "Telč,,aut.nádr.", time: "19:59", offset: 24 },
-        { name: "Telč,,Interiér", time: "20:01", offset: 26 },
-        { name: "Dyjice,Dolní Dvorce", time: "20:03", offset: 28 },
-        { name: "Radkov", time: "20:08", offset: 33 },
-        { name: "Slaviboř", time: "20:12", offset: 37 },
-        { name: "Černíč", time: "20:15", offset: 40 }
+    // --- DATA ---
+    const STOPS = [
+        { name: "Studená,,ul.1.máje a", time: "19:35" },
+        { name: "Studená,,H.Bolíko,roz", time: "19:38" },
+        { name: "Mrákotín", time: "19:45" },
+        { name: "Krahulčí", time: "19:49" },
+        { name: "Telč,,aut.nádr.", time: "19:59" },
+        { name: "Telč,,Interiér", time: "20:01" },
+        { name: "Dyjice,Dolní Dvorce", time: "20:03" },
+        { name: "Radkov", time: "20:08" }
     ];
 
     let state = {
-        powered: false,
         line: "790968",
         spoj: "2",
-        activeStopIdx: 0,
-        currentPrice: 11,
-        audioReady: false,
-        modalTarget: '',
-        baseTime: null // Reálný čas začátku simulace
+        activeIdx: 0,
+        price: 11,
+        isBooted: false,
+        buffer: "",
+        target: ""
     };
 
-    // --- SYSTÉM (POWER / BOOT) ---
-    function sys_togglePower() {
-        const boot = document.getElementById('boot-screen');
-        const logs = document.getElementById('boot-logs');
-        const ui = document.getElementById('main-ui');
+    // --- BOOTOVÁNÍ (14 AKCÍ) ---
+    function startSystem() {
+        if(state.isBooted) return;
+        const layer = document.getElementById('boot-layer');
+        layer.style.display = 'block';
 
-        if (!state.powered) {
-            logs.style.display = "block";
-            // Aktivace audia (povinné pro prohlížeče)
-            document.getElementById('audio-gong').play().then(() => {
-                document.getElementById('audio-gong').pause();
-                state.audioReady = true;
-            }).catch(() => {});
+        // Odblokování audia
+        document.getElementById('snd-gong').play().then(()=> {
+            document.getElementById('snd-gong').pause();
+            document.getElementById('snd-gong').currentTime = 0;
+        }).catch(()=>{});
 
-            setTimeout(() => {
-                boot.style.opacity = "0";
+        const logActions = [
+            "Initializing SYNERGY OCC Hardware...",
+            "CPU: ARM Cortex-A53 1.4GHz detected.",
+            "RAM Check: 1024MB ... OK",
+            "Storage: onboard eMMC 8GB ... mounted.",
+            "Loading Linux Kernel 5.10.24-syn ...",
+            "Starting Network Services (LTE/GPRS) ... OK",
+            "Connecting to ROPID Dispatch Center ... Connected.",
+            "Initializing VDV-KA Smartcard Module ... OK",
+            "Loading Stop Database: 12.500 entries loaded.",
+            "GPS Lock: 49.1923N, 15.4512E (Fixed).",
+            "Verifying Driver Credentials ... Driver 10342 OK.",
+            "Loading Graphical User Interface ...",
+            "Syncing System Time via NTP ... Done.",
+            "SYSTEM READY. Starting Service Mode."
+        ];
+
+        let step = 0;
+        const interval = setInterval(() => {
+            layer.innerHTML += `<div><span style="color:#555">[${new Date().toLocaleTimeString()}]</span> ${logActions[step]}</div>`;
+            layer.scrollTop = layer.scrollHeight;
+            step++;
+            if(step >= logActions.length) {
+                clearInterval(interval);
                 setTimeout(() => {
-                    boot.style.display = "none";
-                    ui.style.display = "flex";
-                    state.powered = true;
-                    state.baseTime = new Date();
-                    initDrive();
-                }, 500);
-            }, 2000);
-        } else {
-            location.reload();
-        }
+                    layer.style.display = 'none';
+                    document.getElementById('app-ui').style.display = 'flex';
+                    state.isBooted = true;
+                    initApp();
+                }, 1000);
+            }
+        }, 180);
     }
 
-    function sys_logout() {
-        if (confirm("Opravdu ukončit službu?")) location.reload();
-    }
-
-    function sys_reset() {
-        state.activeStopIdx = 0;
-        state.baseTime = new Date();
-        initDrive();
-    }
-
-    // --- JÍZDA A ZASTÁVKY ---
-    function initDrive() {
-        document.getElementById('ui-run-info').innerText = `Jízda: ${state.line}/${state.spoj}`;
+    // --- APLIKACE ---
+    function initApp() {
         renderStops();
-        updateDelay();
+        updateDisplay();
+        setInterval(tick, 1000);
+    }
+
+    function tick() {
+        const now = new Date();
+        document.getElementById('val-clock').innerText = now.toLocaleTimeString('cs-CZ');
+        
+        // Výpočet zpoždění
+        const planStr = STOPS[state.activeIdx].time;
+        const [ph, pm] = planStr.split(':').map(Number);
+        const pDate = new Date();
+        pDate.setHours(ph, pm, 0);
+
+        const diff = Math.floor((now - pDate) / 60000);
+        const delEl = document.getElementById('val-delay');
+        delEl.innerText = (diff >= 0 ? "+" : "") + diff + " m";
+        delEl.className = `delay-tag ${diff > 0 ? 'delay-late' : 'delay-ok'}`;
     }
 
     function renderStops() {
-        const container = document.getElementById('stop-list-container');
-        container.innerHTML = '';
-        
-        STOPS_DB.forEach((stop, idx) => {
+        const cont = document.getElementById('stop-container');
+        cont.innerHTML = '';
+        STOPS.forEach((s, i) => {
             const div = document.createElement('div');
-            div.className = `stop-entry ${idx === state.activeStopIdx ? 'active' : ''} ${idx < state.activeStopIdx ? 'passed' : ''}`;
-            
-            // Výpočet zobrazeného času (fixní jízdní řád)
-            div.innerHTML = `
-                <div>${stop.time}</div>
-                <div style="color:#888; font-size:12px">${25 - idx} | 1|</div>
-                <div>${stop.name}</div>
-            `;
-            container.appendChild(div);
+            div.className = `stop-item ${i === state.activeIdx ? 'active' : ''}`;
+            div.innerHTML = `<div>${s.time}</div><div style="font-size:11px; color:#888">21|</div><div>${s.name}</div>`;
+            cont.appendChild(div);
         });
-
-        // Automatické odrolování na aktivní zastávku
-        const activeEl = container.querySelector('.active');
-        if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const act = cont.querySelector('.active');
+        if(act) act.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function drive_nextStop() {
-        if (state.activeStopIdx < STOPS_DB.length - 1) {
-            state.activeStopIdx++;
-            sys_playGong();
+    function nextStop() {
+        if(state.activeIdx < STOPS.length - 1) {
+            state.activeIdx++;
             renderStops();
-            updateDelay();
+            playGong();
         }
     }
 
-    // --- LOGIKA ZPOŽDĚNÍ (OPRAVENO) ---
-    function updateDelay() {
-        const now = new Date();
-        const currentStop = STOPS_DB[state.activeStopIdx];
-        
-        // Rozklad času z DB (např. 19:35)
-        const [planH, planM] = currentStop.time.split(':').map(Number);
-        
-        // Vytvoření objektu času plánovaného odjezdu pro dnešek
-        const planTime = new Date();
-        planTime.setHours(planH, planM, 0);
-
-        // Rozdíl v milisekundách
-        const diffMs = now - planTime;
-        const diffMins = Math.floor(diffMs / 60000);
-
-        const el = document.getElementById('ui-delay');
-        if (diffMins >= 0) {
-            el.innerText = `+${diffMins} m`;
-            el.className = "delay-indicator delay-late";
-        } else {
-            el.innerText = `${diffMins} m`;
-            el.className = "delay-indicator delay-early";
-        }
+    function playGong() {
+        const g = document.getElementById('snd-gong');
+        g.currentTime = 0;
+        g.play().catch(()=>{});
     }
 
-    // --- JÍZDENKY ---
-    function ticket_setCategory(btn, price) {
-        document.querySelectorAll('.ticket-key').forEach(k => k.classList.remove('selected'));
+    function changeCat(btn, p) {
+        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        state.currentPrice = price;
-        document.getElementById('ui-price-disp').innerText = price.toFixed(2).replace('.', ',') + " Kč";
+        state.price = p;
+        document.getElementById('val-price').innerText = p.toFixed(2).replace('.', ',') + " Kč";
     }
 
-    function ticket_clear() {
-        console.log("Buffer vymazán");
+    function sellTicket() {
+        alert("Jízdenka vytisknuta.");
     }
 
-    function drive_confirmSale() {
-        alert(`Jízdenka v hodnotě ${state.currentPrice} Kč vytisknuta.`);
+    function clearBuffer() {
+        console.log("Storno");
     }
 
-    // --- MODÁLNÍ OKNA (VSTUPY) ---
-    function ui_openNumModal(target) {
-        state.modalTarget = target;
-        document.getElementById('modal-title').innerText = target === 'linka' ? "Zadejte číslo linky" : "Zadejte číslo spoje";
-        document.getElementById('modal-input-field').value = '';
-        document.getElementById('modal-num').style.display = 'flex';
-        document.getElementById('modal-input-field').focus();
+    // --- MODÁL LINKA/SPOJ ---
+    function openInput(t) {
+        state.target = t;
+        state.buffer = "";
+        document.getElementById('modal-title').innerText = t === 'line' ? "Zadejte Linku" : "Zadejte Spoj";
+        document.getElementById('modal-val').innerText = "_";
+        document.getElementById('modal').style.display = 'flex';
     }
 
-    function ui_closeModal() {
-        document.getElementById('modal-num').style.display = 'none';
+    function modType(n) {
+        state.buffer += n;
+        document.getElementById('modal-val').innerText = state.buffer;
     }
 
-    function ui_confirmModal() {
-        const val = document.getElementById('modal-input-field').value;
-        if (val) {
-            if (state.modalTarget === 'linka') {
-                state.line = val;
-                document.querySelectorAll('.side-input-box')[0].innerText = val;
-            } else {
-                state.spoj = val;
-                document.querySelectorAll('.side-input-box')[1].innerText = val;
-            }
-            initDrive();
-        }
-        ui_closeModal();
+    function modClear() {
+        state.buffer = "";
+        document.getElementById('modal-val').innerText = "_";
     }
 
-    // --- POMOCNÉ FUNKCE ---
-    function sys_playGong() {
-        const audio = document.getElementById('audio-gong');
-        audio.currentTime = 0;
-        audio.play().catch(e => console.warn("Gong block:", e));
+    function modConfirm() {
+        if(state.target === 'line') state.line = state.buffer;
+        else state.spoj = state.buffer;
+        
+        document.getElementById('txt-line-info').innerText = `Jízda: ${state.line} / ${state.spoj}`;
+        const inputs = document.querySelectorAll('.input-value');
+        if(state.target === 'line') inputs[0].innerText = state.line;
+        else inputs[1].innerText = state.spoj;
+
+        document.getElementById('modal').style.display = 'none';
     }
 
-    // Refresh hodin a zpoždění každou sekundu
-    setInterval(() => {
-        if (!state.powered) return;
-        const now = new Date();
-        document.getElementById('ui-clock').innerText = now.toLocaleTimeString('cs-CZ', { hour12: false });
-        updateDelay();
-    }, 1000);
-
+    function updateDisplay() {
+        document.getElementById('txt-line-info').innerText = `Jízda: ${state.line} / ${state.spoj}`;
+    }
 </script>
 
 </body>
