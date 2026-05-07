@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Synergy OCC - Ultimate Mobile v7.0</title>
+    <title>Synergy OCC Professional - Mobile Edition v8.0</title>
     <style>
-        /* KOMPLETNÍ CSS STYLING 
-           Optimalizováno pro mobilní zařízení, těsná tlačítka 
+        /* SYNERGY OCC - KOMPLETNÍ CSS STYLING
+           Optimalizováno pro mobilní zobrazení a maximální přehlednost.
         */
         :root {
             --syn-blue: #004b93;
-            --syn-dark: #00264d;
+            --syn-dark: #001a33;
             --syn-orange: #f39200;
             --syn-yellow: #ffcc00;
             --syn-green: #4db748;
             --syn-red: #cc0000;
             --syn-light-blue: #00a4e4;
-            --bg-black: #000000;
-            --text-grey: #a0a0a0;
+            --white: #ffffff;
+            --grey-light: #f4f4f4;
+            --grey-dark: #333333;
         }
 
         * {
@@ -30,8 +31,9 @@
         body {
             background: #000;
             color: #fff;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -39,343 +41,370 @@
             touch-action: manipulation;
         }
 
-        /* HLAVNÍ KONTEJNER */
-        #occ-frame {
-            width: 100vw;
-            height: 100vh;
+        /* HLAVNÍ ŠASI */
+        #device-container {
+            width: 100%;
+            height: 100%;
             background: var(--syn-blue);
             display: flex;
             flex-direction: column;
-            border: 5px solid var(--syn-dark);
+            border: 4px solid var(--syn-dark);
             position: relative;
         }
 
-        #display-wrapper {
+        /* DISPLEJ */
+        #lcd-screen {
             flex: 1;
             background: #000;
-            margin: 5px;
-            border-radius: 4px;
+            margin: 4px;
+            border-radius: 2px;
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        /* --- BOOT SCREEN --- */
-        #boot-layer {
+        /* --- 1. BOOT SEQUENCE --- */
+        #boot-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
-            z-index: 9999;
-            padding: 20px;
+            z-index: 10000;
+            padding: 15px;
             color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.4;
             overflow-y: auto;
             display: none;
         }
 
-        /* --- LOGIN SCREEN --- */
-        #login-layer {
+        /* --- 2. LOGIN SCREEN --- */
+        #login-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #111;
-            z-index: 8000;
+            z-index: 9000;
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
-        .login-box {
-            width: 280px;
+        .login-card {
+            width: 90%;
+            max-width: 300px;
             text-align: center;
         }
 
-        .display-num {
+        .login-input-area {
             background: #000;
             color: var(--syn-yellow);
-            font-size: 32px;
+            font-size: 36px;
             padding: 10px;
-            margin-bottom: 10px;
-            border: 2px solid #333;
-            height: 60px;
+            margin-bottom: 15px;
+            border: 2px solid #444;
+            height: 65px;
             display: flex;
             justify-content: center;
             align-items: center;
-            letter-spacing: 4px;
+            letter-spacing: 5px;
         }
 
-        /* --- MAIN UI --- */
-        #main-ui {
+        /* --- 3. MENU / NASTAVENÍ LINKY --- */
+        #menu-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--syn-dark);
+            z-index: 8500;
+            display: none;
+            flex-direction: column;
+            padding: 10px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .menu-field {
+            background: #000;
+            border: 1px solid var(--syn-light-blue);
+            padding: 15px;
+            text-align: center;
+        }
+
+        .menu-field.active {
+            border: 2px solid var(--syn-yellow);
+            background: #111;
+        }
+
+        /* --- 4. HLAVNÍ APLIKACE --- */
+        #main-app {
             display: none;
             flex-direction: column;
             height: 100%;
         }
 
-        .status-bar {
-            height: 40px;
+        .top-status {
+            height: 35px;
             background: #000;
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0 10px;
-            border-bottom: 2px solid #222;
+            font-size: 13px;
             font-weight: bold;
-            font-size: 14px;
+            border-bottom: 1px solid #333;
         }
 
-        .delay-indicator {
-            padding: 3px 10px;
+        .delay-box {
+            padding: 2px 8px;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 15px;
         }
-        .late { background: var(--syn-red); }
-        .on-time { background: #333; }
+        .delay-red { background: var(--syn-red); }
+        .delay-gray { background: #444; }
 
-        /* PRACOVNÍ PLOCHA */
-        .workspace {
+        .middle-section {
             flex: 1;
             display: grid;
-            grid-template-columns: 80px 1fr 240px; /* Užší klávesnice pro mobil */
+            grid-template-columns: 1fr 220px; /* Větší prostor pro zastávky */
             background: #444;
             gap: 1px;
+            overflow: hidden;
         }
 
-        /* LEVÝ PANEL (LINKA / SPOJ) */
-        .sidebar-left {
-            background: #111;
-            display: flex;
-            flex-direction: column;
-            padding: 10px 4px;
-            gap: 10px;
-        }
-
-        .input-block {
-            text-align: center;
-        }
-
-        .label-mini { font-size: 9px; color: #777; margin-bottom: 2px; }
-        .value-box {
-            background: #222;
-            border: 1px solid var(--syn-light-blue);
-            color: var(--syn-yellow);
-            padding: 8px 0;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .value-box.active-edit {
-            border-color: var(--syn-yellow);
-            background: #333;
-        }
-
-        /* STŘEDNÍ PANEL (ZASTÁVKY) */
-        .itinerary {
-            background: #fff;
+        /* SEZNAM ZASTÁVEK */
+        .stop-list {
+            background: var(--white);
             color: #000;
             overflow-y: auto;
+            position: relative;
         }
 
-        .stop-row {
+        .stop-entry {
             display: grid;
-            grid-template-columns: 60px 30px 1fr;
-            padding: 10px 8px;
-            border-bottom: 1px solid #ddd;
-            font-size: 15px;
+            grid-template-columns: 55px 30px 1fr;
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
             align-items: center;
         }
 
-        .stop-row.active {
+        .stop-entry.active {
             background: var(--syn-orange);
             color: #fff;
             font-weight: bold;
         }
 
-        /* NUMERICKÁ KLÁVESNICE - TĚSNÁ */
-        .numpad {
-            background: #888;
+        .stop-entry.passed {
+            opacity: 0.5;
+        }
+
+        /* NUMERIKA */
+        .side-keypad {
+            background: #999;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1px;
             padding: 1px;
         }
 
-        .k-btn {
+        .btn {
             background: var(--syn-blue);
             color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
-            height: 60px;
-            cursor: pointer;
             border: none;
+            height: 52px;
         }
 
-        .k-btn:active { background: var(--syn-light-blue); }
-        .k-btn.grey { background: #444; font-size: 12px; }
-        .k-btn.orange { background: var(--syn-orange); }
-        .k-btn.green { background: var(--syn-green); }
+        .btn:active { background: var(--syn-light-blue); }
+        .btn.f-keys { background: #555; font-size: 11px; }
+        .btn.orange { background: var(--syn-orange); }
+        .btn.green { background: var(--syn-green); }
 
-        /* JÍZDENKY - SPODNÍ LIŠTA */
-        .ticket-bar {
-            height: 100px;
-            background: #1a1a1a;
+        /* JÍZDENKY - SPODNÍ ČÁST */
+        .bottom-tickets {
+            height: 90px;
+            background: #111;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: 1fr 1fr;
             gap: 1px;
-            padding: 1px;
+            padding: 2px;
         }
 
-        .t-btn {
+        .ticket-item {
             background: var(--syn-light-blue);
             color: #fff;
             border: none;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             text-transform: uppercase;
         }
 
-        .t-btn.selected {
+        .ticket-item.selected {
             background: var(--syn-yellow);
             color: #000;
         }
 
-        .t-btn.red { background: var(--syn-red); }
+        .ticket-item.menu-trigger {
+            background: #444;
+            color: var(--syn-yellow);
+        }
 
-        .price-overlay {
+        .price-display {
             position: absolute;
-            bottom: 110px;
-            right: 250px;
-            font-size: 36px;
+            bottom: 100px;
+            right: 235px;
+            font-size: 32px;
             font-weight: 900;
             color: var(--syn-red);
-            text-shadow: 2px 2px 0 #fff;
+            text-shadow: 1px 1px 0 #fff;
             pointer-events: none;
         }
 
         /* 🍄 POWER BUTTON */
-        #power-switch {
+        #pwr-sensor {
             position: absolute;
             bottom: 15px;
             left: 15px;
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             background: #222;
-            border: 3px solid #444;
+            border: 2px solid #555;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 28px;
-            z-index: 10000;
-            box-shadow: 0 4px 15px #000;
+            font-size: 25px;
+            z-index: 11000;
+            box-shadow: 0 0 15px #000;
         }
 
-        /* ÚPRAVA PRO VELMI MALÉ DISPLEJE */
-        @media (max-height: 500px) {
-            .k-btn { height: 45px; font-size: 18px; }
-            .status-bar { height: 30px; }
-            .ticket-bar { height: 80px; }
-        }
+        /* POMOCNÉ TŘÍDY */
+        .hidden { display: none !important; }
+        .flex { display: flex !important; }
+
     </style>
 </head>
 <body>
 
-<div id="occ-frame">
-    <div id="power-switch" onclick="sysBoot()">🍄</div>
+<div id="device-container">
+    <div id="pwr-sensor" onclick="initBoot()">🍄</div>
 
-    <div id="display-wrapper">
-        <div id="boot-layer"></div>
+    <div id="lcd-screen">
+        <div id="boot-overlay"></div>
 
-        <div id="login-layer">
-            <div class="login-box">
-                <div id="login-title" style="margin-bottom: 10px; color:#aaa">ZADEJTE ID ŘIDIČE</div>
-                <div class="display-num" id="login-disp">_</div>
-                <div class="numpad" style="grid-template-columns: repeat(3, 1fr); background:transparent">
-                    <button class="k-btn" onclick="tapLogin(1)">1</button>
-                    <button class="k-btn" onclick="tapLogin(2)">2</button>
-                    <button class="k-btn" onclick="tapLogin(3)">3</button>
-                    <button class="k-btn" onclick="tapLogin(4)">4</button>
-                    <button class="k-btn" onclick="tapLogin(5)">5</button>
-                    <button class="k-btn" onclick="tapLogin(6)">6</button>
-                    <button class="k-btn" onclick="tapLogin(7)">7</button>
-                    <button class="k-btn" onclick="tapLogin(8)">8</button>
-                    <button class="k-btn" onclick="tapLogin(9)">9</button>
-                    <button class="k-btn grey" onclick="clearLogin()">C</button>
-                    <button class="k-btn" onclick="tapLogin(0)">0</button>
-                    <button class="k-btn green" onclick="submitLogin()">OK</button>
+        <div id="login-overlay">
+            <div class="login-card">
+                <div id="login-label" style="margin-bottom: 10px; font-size: 14px;">ZADEJTE ČÍSLO ŘIDIČE</div>
+                <div class="login-input-area" id="login-val">ID?</div>
+                <div class="side-keypad" style="grid-template-columns: repeat(3, 1fr); background:transparent">
+                    <button class="btn" onclick="typeLogin(1)">1</button>
+                    <button class="btn" onclick="typeLogin(2)">2</button>
+                    <button class="btn" onclick="typeLogin(3)">3</button>
+                    <button class="btn" onclick="typeLogin(4)">4</button>
+                    <button class="btn" onclick="typeLogin(5)">5</button>
+                    <button class="btn" onclick="typeLogin(6)">6</button>
+                    <button class="btn" onclick="typeLogin(7)">7</button>
+                    <button class="btn" onclick="typeLogin(8)">8</button>
+                    <button class="btn" onclick="typeLogin(9)">9</button>
+                    <button class="btn f-keys" onclick="clearLogin()">C</button>
+                    <button class="btn" onclick="typeLogin(0)">0</button>
+                    <button class="btn green" onclick="submitLogin()">OK</button>
                 </div>
             </div>
         </div>
 
-        <div id="main-ui">
-            <div class="status-bar">
-                <span id="ui-run">790968 / 2</span>
-                <span>07.05.2026</span>
-                <div id="ui-delay" class="delay-indicator on-time">+0 m</div>
-                <span id="ui-clock">00:00:00</span>
+        <div id="menu-overlay">
+            <h2 style="text-align:center; margin-bottom:15px; color:var(--syn-yellow)">NASTAVENÍ SLUŽBY</h2>
+            <div class="menu-grid">
+                <div class="menu-field" id="m-line" onclick="setMenuTarget('line')">
+                    <small>LINKA</small><br><b id="m-val-line">790968</b>
+                </div>
+                <div class="menu-field" id="m-spoj" onclick="setMenuTarget('spoj')">
+                    <small>SPOJ</small><br><b id="m-val-spoj">2</b>
+                </div>
+                <div class="menu-field" id="m-kurz" onclick="setMenuTarget('kurz')">
+                    <small>KURZ</small><br><b id="m-val-kurz">1</b>
+                </div>
+                <div class="menu-field" style="background:var(--syn-red)" onclick="closeMenu()">
+                    <small>ZPĚT</small><br><b>X</b>
+                </div>
+            </div>
+            <div style="flex:1"></div>
+            <div class="side-keypad" style="grid-template-columns: repeat(4, 1fr);">
+                <button class="btn" onclick="typeMenu(7)">7</button>
+                <button class="btn" onclick="typeMenu(8)">8</button>
+                <button class="btn" onclick="typeMenu(9)">9</button>
+                <button class="btn f-keys" onclick="clearMenu()">C</button>
+                <button class="btn" onclick="typeMenu(4)">4</button>
+                <button class="btn" onclick="typeMenu(5)">5</button>
+                <button class="btn" onclick="typeMenu(6)">6</button>
+                <button class="btn green" style="grid-row: span 2" onclick="closeMenu()">OK</button>
+                <button class="btn" onclick="typeMenu(1)">1</button>
+                <button class="btn" onclick="typeMenu(2)">2</button>
+                <button class="btn" onclick="typeMenu(3)">3</button>
+                <button class="btn" style="grid-column: span 2" onclick="typeMenu(0)">0</button>
+                <button class="btn f-keys">.</button>
+            </div>
+        </div>
+
+        <div id="main-app">
+            <div class="top-status">
+                <span id="st-run">790968 / 2 / 1</span>
+                <span id="st-date">07.05.2026</span>
+                <div id="st-delay" class="delay-box delay-gray">+0 m</div>
+                <span id="st-clock">00:00:00</span>
             </div>
 
-            <div class="workspace">
-                <div class="sidebar-left">
-                    <div class="input-block">
-                        <div class="label-mini">LINKA</div>
-                        <div class="value-box" id="box-line" onclick="setActiveInput('line')">790968</div>
+            <div class="middle-section">
+                <div class="stop-list" id="stop-container">
                     </div>
-                    <div class="input-block">
-                        <div class="label-mini">SPOJ</div>
-                        <div class="value-box" id="box-spoj" onclick="setActiveInput('spoj')">2</div>
-                    </div>
-                    <div style="flex:1"></div>
-                    <div class="value-box grey" style="color:#fff; font-size:10px" onclick="location.reload()">RESTART</div>
+
+                <div class="side-keypad">
+                    <button class="btn f-keys">PŘEST</button>
+                    <button class="btn" onclick="typeMain(7)">7</button>
+                    <button class="btn" onclick="typeMain(8)">8</button>
+                    <button class="btn" onclick="typeMain(9)">9</button>
+                    <button class="btn f-keys">MULT</button>
+                    <button class="btn" onclick="typeMain(4)">4</button>
+                    <button class="btn" onclick="typeMain(5)">5</button>
+                    <button class="btn" onclick="typeMain(6)">6</button>
+                    <button class="btn f-keys">KART</button>
+                    <button class="btn" onclick="typeMain(1)">1</button>
+                    <button class="btn" onclick="typeMain(2)">2</button>
+                    <button class="btn" onclick="typeMain(3)">3</button>
+                    <button class="btn f-keys" onclick="mainClear()">STOR</button>
+                    <button class="btn" onclick="typeMain('.')">.</button>
+                    <button class="btn" onclick="typeMain(0)">0</button>
+                    <button class="btn f-keys">±</button>
+                    <button class="btn orange" style="grid-column: span 2" onclick="doNext()">DALŠÍ</button>
+                    <button class="btn green" style="grid-column: span 2" onclick="doSell()">OK</button>
                 </div>
-
-                <div class="itinerary" id="stop-list">
-                    </div>
-
-                <div class="numpad">
-                    <button class="k-btn grey">PŘES</button>
-                    <button class="k-btn" onclick="tapNum(7)">7</button>
-                    <button class="k-btn" onclick="tapNum(8)">8</button>
-                    <button class="k-btn" onclick="tapNum(9)">9</button>
-                    
-                    <button class="k-btn grey">MULT</button>
-                    <button class="k-btn" onclick="tapNum(4)">4</button>
-                    <button class="k-btn" onclick="tapNum(5)">5</button>
-                    <button class="k-btn" onclick="tapNum(6)">6</button>
-                    
-                    <button class="k-btn grey">KART</button>
-                    <button class="k-btn" onclick="tapNum(1)">1</button>
-                    <button class="k-btn" onclick="tapNum(2)">2</button>
-                    <button class="k-btn" onclick="tapNum(3)">3</button>
-                    
-                    <button class="k-btn grey" onclick="clearBuffer()">STOR</button>
-                    <button class="k-btn" onclick="tapNum('.')">.</button>
-                    <button class="k-btn" onclick="tapNum(0)">0</button>
-                    <button class="k-btn grey" onclick="tapNum('±')">±</button>
-                    
-                    <button class="k-btn orange" style="grid-column: span 2" onclick="nextStop()">DALŠÍ</button>
-                    <button class="k-btn green" style="grid-column: span 2" onclick="confirmAction()">OK</button>
-                </div>
-
-                <div class="price-overlay" id="ui-price">11,00 Kč</div>
+                
+                <div class="price-display" id="pr-val">11,00 Kč</div>
             </div>
 
-            <div class="ticket-bar">
-                <button class="t-btn selected" onclick="setCat(this, 11)">Základní</button>
-                <button class="t-btn" onclick="setCat(this, 5)">Dítě</button>
-                <button class="t-btn" onclick="setCat(this, 8)">Student</button>
-                <button class="t-btn" onclick="setCat(this, 8)">Osoba 65</button>
-                <button class="t-btn" onclick="setCat(this, 0)">ZTP</button>
-                <button class="t-btn" onclick="setCat(this, 7)">Pes</button>
-                <button class="t-btn" onclick="setCat(this, 0)">Dítě do</button>
-                <button class="t-btn" onclick="setCat(this, 0)">NavUstav</button>
-                <button class="t-btn" onclick="setCat(this, 0)">Inv3st.</button>
-                <button class="t-btn red" onclick="location.reload()">KONEC</button>
+            <div class="bottom-tickets">
+                <button class="ticket-item menu-trigger" onclick="openMenu()">MENU</button>
+                <button class="ticket-item selected" onclick="setCat(this, 11)">Základní</button>
+                <button class="ticket-item" onclick="setCat(this, 5)">Dítě</button>
+                <button class="ticket-item" onclick="setCat(this, 8)">Student</button>
+                <button class="ticket-item" onclick="setCat(this, 8)">Osoba 65</button>
+                <button class="ticket-item" onclick="setCat(this, 0)">ZTP</button>
+                <button class="ticket-item" onclick="setCat(this, 7)">Pes</button>
+                <button class="ticket-item" onclick="setCat(this, 0)">Dítě do</button>
+                <button class="ticket-item" onclick="setCat(this, 0)">NavUstav</button>
+                <button class="ticket-item red" onclick="location.reload()">KONEC</button>
             </div>
         </div>
     </div>
@@ -384,9 +413,9 @@
 <audio id="snd-gong" src="gong.mp3" preload="auto"></audio>
 
 <script>
-    /* --- SYNERGY OCC LOGIC CORE --- */
+    /* --- SYNERGY OCC CORE LOGIC --- */
 
-    const DB = {
+    const DATA = {
         driver: "10342",
         pin: "3508",
         stops: [
@@ -399,194 +428,192 @@
             {n: "Dyjice,Dolní Dvorce", t: "20:03"},
             {n: "Radkov", t: "20:08"},
             {n: "Slaviboř", t: "20:12"},
-            {n: "Černíč", t: "20:15"}
+            {n: "Černíč", t: "20:15"},
+            {n: "Třešť", t: "20:30"},
+            {n: "Jihlava,,aut.nádr.", t: "20:55"}
         ]
     };
 
     let state = {
-        booted: false,
+        power: false,
         loginStep: 1, // 1: ID, 2: PIN
         loginBuf: "",
-        activeInput: null, // 'line' nebo 'spoj'
+        menuTarget: 'line',
         line: "790968",
         spoj: "2",
-        curIdx: 0,
+        kurz: "1",
+        idx: 0,
         price: 11,
-        numBuf: ""
+        mainBuf: ""
     };
 
-    // --- BOOTOVÁNÍ ---
-    function sysBoot() {
-        if(state.booted) return;
-        const layer = document.getElementById('boot-layer');
-        layer.style.display = 'block';
+    // 1. BOOTOVÁNÍ (16 AKCÍ)
+    function initBoot() {
+        if(state.power) return;
+        const b = document.getElementById('boot-overlay');
+        b.style.display = 'block';
 
-        // Povolit zvuk
-        const gong = document.getElementById('snd-gong');
-        gong.play().then(() => { gong.pause(); }).catch(()=>{});
+        // Povolení audia
+        const g = document.getElementById('snd-gong');
+        g.play().then(() => g.pause()).catch(() => {});
 
-        const logLines = [
-            "SYNERGY BOOTLOADER v7.0.1 (build 2026-05-07)",
-            "CPU: ARMv8 64-bit Core initialized.",
-            "RAM: 2048MB DDR4 testing... OK",
-            "DISK: Internal 16GB mount /root ... OK",
-            "NET: LTE/GPRS modem search... Found (O2 CZ)",
-            "NET: IP Address 10.42.18.99 assigned.",
-            "KERN: Loading SynergyOS Kernel 5.10.0...",
-            "KERN: Modules: [vdv-ka, thermal, touchscreen, printer] loaded.",
-            "GPS: Searching for satellites... Locked (49.18N, 15.45E)",
-            "VDV: Smartcard Reader initialized (slot 0).",
-            "DB: Stop list database sync... 14.288 records.",
-            "UI: Starting X-Server graphical engine...",
-            "UI: Calibrating touch interface...",
-            "AUTH: Waiting for driver identification...",
-            "SYSTEM READY."
+        const logs = [
+            "Synergy Hardware Abstraction Layer v8.0.4",
+            "CPU: ARM Cortex-A53 rev 4 (v8l) - 4 Cores",
+            "RAM: 2048MB testing... OK",
+            "STORAGE: eMMC 16GB mount /system ... OK",
+            "MODEM: Qualcomm Snapdragon X5 LTE searching...",
+            "MODEM: Connected to O2 CZ (RSRQ: -11dB)",
+            "GPS: Time sync via GNSS... Locked.",
+            "OS: Synergy Linux Kernel 5.15.0-occ boot",
+            "OS: Initializing VDV-KA secure element...",
+            "OS: Loading graphic drivers (Mali-T720)...",
+            "SERVICE: StopDatabase sync (14.288 records)",
+            "SERVICE: TicketPrinter check... READY",
+            "SERVICE: CardReader (NFC) check... READY",
+            "GUI: Loading Synergy OCC Application Shell...",
+            "GUI: Touchscreen calibration... DONE",
+            "SYSTEM: READY. WAITING FOR OPERATOR."
         ];
 
-        let lineIdx = 0;
-        const interval = setInterval(() => {
-            layer.innerHTML += `<div><span style="color:#666">[${new Date().toLocaleTimeString()}]</span> ${logLines[lineIdx]}</div>`;
-            layer.scrollTop = layer.scrollHeight;
-            lineIdx++;
-            if(lineIdx >= logLines.length) {
-                clearInterval(interval);
+        let i = 0;
+        const timer = setInterval(() => {
+            b.innerHTML += `<div><span style="color:#666">[${new Date().toLocaleTimeString()}]</span> ${logs[i]}</div>`;
+            b.scrollTop = b.scrollHeight;
+            i++;
+            if(i >= logs.length) {
+                clearInterval(timer);
                 setTimeout(() => {
-                    layer.style.display = 'none';
-                    document.getElementById('login-layer').style.display = 'flex';
+                    b.style.display = 'none';
+                    document.getElementById('login-overlay').style.display = 'flex';
                 }, 800);
             }
-        }, 150);
+        }, 130);
     }
 
-    // --- LOGIN LOGIKA ---
-    function tapLogin(n) {
+    // 2. LOGIN LOGIKA
+    function typeLogin(n) {
         state.loginBuf += n;
         renderLogin();
     }
-
     function clearLogin() {
         state.loginBuf = "";
         renderLogin();
     }
-
     function renderLogin() {
-        const d = document.getElementById('login-disp');
+        const d = document.getElementById('login-val');
         if(state.loginStep === 1) d.innerText = state.loginBuf || "ID?";
         else d.innerText = "*".repeat(state.loginBuf.length) || "PIN?";
     }
-
     function submitLogin() {
         if(state.loginStep === 1) {
-            if(state.loginBuf === DB.driver) {
+            if(state.loginBuf === DATA.driver) {
                 state.loginStep = 2;
                 state.loginBuf = "";
-                document.getElementById('login-title').innerText = "ZADEJTE PIN";
+                document.getElementById('login-label').innerText = "ZADEJTE PIN";
                 renderLogin();
             } else {
-                alert("Chybné ID!");
-                clearLogin();
+                alert("Neznámé ID!"); clearLogin();
             }
         } else {
-            if(state.loginBuf === DB.pin) {
-                document.getElementById('login-layer').style.display = 'none';
-                document.getElementById('main-ui').style.display = 'flex';
-                state.booted = true;
-                initApp();
+            if(state.loginBuf === DATA.pin) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('main-app').style.display = 'flex';
+                state.power = true;
+                runApp();
             } else {
-                alert("Špatný PIN!");
-                clearLogin();
+                alert("Špatný PIN!"); clearLogin();
             }
         }
     }
 
-    // --- HLAVNÍ UI FUNKCE ---
-    function initApp() {
-        renderStops();
-        setInterval(clockTick, 1000);
+    // 3. MENU LOGIKA
+    function openMenu() {
+        document.getElementById('menu-overlay').style.display = 'flex';
+        setMenuTarget('line');
+    }
+    function closeMenu() {
+        document.getElementById('menu-overlay').style.display = 'none';
+        state.line = document.getElementById('m-val-line').innerText;
+        state.spoj = document.getElementById('m-val-spoj').innerText;
+        state.kurz = document.getElementById('m-val-kurz').innerText;
+        document.getElementById('st-run').innerText = `${state.line} / ${state.spoj} / ${state.kurz}`;
+    }
+    function setMenuTarget(t) {
+        state.menuTarget = t;
+        document.querySelectorAll('.menu-field').forEach(f => f.classList.remove('active'));
+        document.getElementById(`m-${t}`).classList.add('active');
+    }
+    function typeMenu(n) {
+        let el = document.getElementById(`m-val-${state.menuTarget}`);
+        if(el.innerText === "0") el.innerText = n;
+        else el.innerText += n;
+    }
+    function clearMenu() {
+        document.getElementById(`m-val-${state.menuTarget}`).innerText = "";
     }
 
-    function clockTick() {
+    // 4. HLAVNÍ APLIKACE
+    function runApp() {
+        buildStops();
+        setInterval(tick, 1000);
+    }
+
+    function tick() {
         const now = new Date();
-        document.getElementById('ui-clock').innerText = now.toLocaleTimeString('cs-CZ');
+        document.getElementById('st-clock').innerText = now.toLocaleTimeString('cs-CZ');
         
-        // Zpoždění
-        const [ph, pm] = DB.stops[state.curIdx].t.split(':').map(Number);
+        // Výpočet zpoždění
+        const stopTime = DATA.stops[state.idx].t.split(':');
         const plan = new Date();
-        plan.setHours(ph, pm, 0);
-
+        plan.setHours(stopTime[0], stopTime[1], 0);
+        
         const diff = Math.floor((now - plan) / 60000);
-        const delEl = document.getElementById('ui-delay');
-        delEl.innerText = (diff >= 0 ? "+" : "") + diff + " m";
-        delEl.className = `delay-indicator ${diff > 0 ? 'late' : 'on-time'}`;
+        const del = document.getElementById('st-delay');
+        del.innerText = (diff >= 0 ? "+" : "") + diff + " m";
+        del.className = `delay-box ${diff > 0 ? 'delay-red' : 'delay-gray'}`;
     }
 
-    function renderStops() {
-        const cont = document.getElementById('stop-list');
-        cont.innerHTML = '';
-        DB.stops.forEach((s, i) => {
+    function buildStops() {
+        const container = document.getElementById('stop-container');
+        container.innerHTML = '';
+        DATA.stops.forEach((s, i) => {
             const row = document.createElement('div');
-            row.className = `stop-row ${i === state.curIdx ? 'active' : ''}`;
-            row.innerHTML = `<div>${s.t}</div><div style="font-size:10px; color:#888">25|</div><div>${s.n}</div>`;
-            cont.appendChild(row);
+            row.className = `stop-entry ${i === state.idx ? 'active' : ''} ${i < state.idx ? 'passed' : ''}`;
+            row.innerHTML = `<div>${s.t}</div><div style="color:#999; font-size:10px">25 |</div><div>${s.n}</div>`;
+            container.appendChild(row);
         });
-        const active = cont.querySelector('.active');
+        const active = container.querySelector('.active');
         if(active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // Změna linky/spoje
-    function setActiveInput(target) {
-        state.activeInput = target;
-        state.numBuf = "";
-        document.querySelectorAll('.value-box').forEach(b => b.classList.remove('active-edit'));
-        document.getElementById(`box-${target}`).classList.add('active-edit');
+    function typeMain(n) {
+        state.mainBuf += n;
+        console.log("Buffer:", state.mainBuf);
+    }
+    function mainClear() {
+        state.mainBuf = "";
     }
 
-    function tapNum(n) {
-        if(state.activeInput) {
-            state.numBuf += n;
-            document.getElementById(`box-${state.activeInput}`).innerText = state.numBuf;
-        } else {
-            // Logika pro zadávání ceny nebo pásma
-            state.numBuf += n;
-        }
-    }
-
-    function clearBuffer() {
-        state.numBuf = "";
-        if(state.activeInput) {
-            document.getElementById(`box-${state.activeInput}`).innerText = "_";
-        }
-    }
-
-    function confirmAction() {
-        if(state.activeInput) {
-            if(state.activeInput === 'line') state.line = state.numBuf;
-            else state.spoj = state.numBuf;
-            
-            document.getElementById('ui-run').innerText = `${state.line} / ${state.spoj}`;
-            state.activeInput = null;
-            state.numBuf = "";
-            document.querySelectorAll('.value-box').forEach(b => b.classList.remove('active-edit'));
-        } else {
-            alert("Akce potvrzena.");
-        }
-    }
-
-    function nextStop() {
-        if(state.curIdx < DB.stops.length - 1) {
-            state.curIdx++;
-            renderStops();
+    function doNext() {
+        if(state.idx < DATA.stops.length - 1) {
+            state.idx++;
+            buildStops();
             const g = document.getElementById('snd-gong');
             g.currentTime = 0;
-            g.play().catch(()=>{});
+            g.play().catch(() => {});
         }
     }
 
     function setCat(btn, p) {
-        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.ticket-item').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         state.price = p;
-        document.getElementById('ui-price').innerText = p.toFixed(2).replace('.', ',') + " Kč";
+        document.getElementById('pr-val').innerText = p.toFixed(2).replace('.', ',') + " Kč";
+    }
+
+    function doSell() {
+        alert("Lístek vytisknut. Cena: " + state.price + " Kč");
     }
 
 </script>
