@@ -1,1 +1,336 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Synergy OCC Apex v17.0</title>
+    <style>
+        :root {
+            --syn-blue: #004b93; --syn-orange: #f39200; --syn-green: #28a745;
+            --syn-red: #dc3545; --syn-dark: #05080a; --gold: #ffcc00;
+            --white: #ffffff; --bsod: #0000aa;
+        }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: 'Consolas', monospace; user-select: none; }
+        body { background-color: #000; height: 100vh; width: 100vw; display: flex; overflow: hidden; color: var(--white); }
+
+        #chassis { width: 100%; height: 100%; background: #111; position: relative; border: 4px solid #222; }
+
+        /* BOOT LAYER - 3 MINUTE VERSION */
+        #boot-layer {
+            position: absolute; top:0; left:0; width:100%; height:100%; background:#000; z-index:30000;
+            padding:30px; color:#00ff41; font-size:10px; line-height:1.1; overflow:hidden; display:none;
+        }
+        .boot-bar-wrap { width: 100%; height: 4px; background: #222; margin-top: 15px; }
+        #boot-bar { height: 100%; background: #00ff41; width: 0%; }
+
+        /* CRASH LAYER (BSOD) */
+        #crash-layer {
+            position: absolute; top:0; left:0; width:100%; height:100%; background:var(--bsod); z-index:40000;
+            padding:50px; display:none; color:#fff; font-family: sans-serif;
+        }
+
+        /* LOGIN LAYER */
+        #login-layer {
+            position: absolute; top:0; left:0; width:100%; height:100%; background: #0a0a0a; z-index:20000;
+            display:none; flex-direction:column; align-items:center; justify-content:center;
+        }
+        .login-lcd { background:#000; color:var(--gold); font-size:28px; width:260px; height:50px; line-height:50px; text-align:center; border:2px solid #444; margin-bottom:20px; }
+
+        /* MENU / EDITOR */
+        #menu-layer {
+            position: absolute; top:0; left:0; width:100%; height:100%; background:var(--syn-dark); z-index:15000;
+            display:none; flex-direction:column; padding:15px;
+        }
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .menu-btn { background: #111; border: 1px solid #333; padding: 8px; text-align: center; }
+        .menu-btn.active { border-color: var(--gold); background: #222; }
+        .menu-btn label { font-size: 8px; color: #888; display: block; }
+        .menu-btn b { color: var(--gold); font-size: 13px; }
+
+        .editor-area { flex: 1; background: #000; border: 1px solid #333; overflow-y: auto; margin-bottom: 10px; padding: 5px; }
+        .stop-row-edit { display: grid; grid-template-columns: 1fr 60px 30px; gap: 4px; margin-bottom: 4px; }
+        .stop-row-edit input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 4px; font-size: 11px; }
+
+        /* APP LAYER */
+        #app-layer { display: none; flex-direction: column; height: 100%; }
+        .top-info { height: 35px; background: #000; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 12px; }
+        
+        .main-container { flex: 1; display: grid; grid-template-columns: 1fr 120px; background: #222; gap: 1px; overflow: hidden; }
+        
+        /* ITINERARY - WIDE */
+        .iti-view { background: #fff; color: #000; overflow-y: auto; }
+        .iti-row { display: grid; grid-template-columns: 50px 30px 1fr; padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; align-items: center; }
+        .iti-row.active { background: var(--syn-orange); color: #fff; font-weight: bold; border-left: 8px solid var(--syn-blue); }
+
+        /* NUMPAD - SLIM */
+        .numpad { background: #0a0c10; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; padding: 1px; }
+        .key { background: #1c2530; color: #fff; border: none; font-size: 18px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .key:active { background: #3d4652; }
+        .key.orange { background: var(--syn-orange); }
+        .key.green { background: var(--syn-green); }
+        .key.blue { background: var(--syn-blue); }
+        .key.wide { grid-column: span 2; }
+        .key.tall { grid-row: span 2; height: 101px; }
+        .key.small { font-size: 9px; color: #718096; }
+
+        /* TICKETS */
+        .ticket-area { height: 100px; background: #000; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; padding: 1px; }
+        .t-btn { background: var(--syn-blue); color: white; border: none; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+        .t-btn.active { background: var(--gold); color: #000; }
+        .t-btn.sys { background: #222; color: var(--gold); }
+
+        .price-tag { position: absolute; bottom: 105px; right: 130px; font-size: 30px; font-weight: 900; color: var(--syn-red); text-shadow: 1px 1px 0 #fff; pointer-events: none; }
+
+        /* OVERLAYS */
+        #special-overlay { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10000; display:none; flex-direction:column; align-items:center; justify-content:center; background:#000; text-align:center; }
+
+        /* MUSHROOM */
+        #mush-btn { position: absolute; bottom: 20px; left: 20px; width: 60px; height: 60px; background: #333; border-radius: 50%; z-index: 50000; display: flex; align-items: center; justify-content: center; font-size: 25px; border: 3px solid #444; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="chassis">
+    <div id="mush-btn" onclick="masterBoot()">🍄</div>
+
+    <div id="screen">
+        <div id="boot-layer">
+            <div id="boot-txt"></div>
+            <div class="boot-bar-wrap"><div id="boot-bar"></div></div>
+        </div>
+
+        <div id="crash-layer">
+            <h1>:(</h1>
+            <p style="margin: 20px 0; font-size: 20px;">V počítači došlo k problému a je třeba jej restartovat.</p>
+            <p>Právě shromažďujeme určité informace o chybách a následně provedeme restart. (0% hotovo)</p>
+            <p style="margin-top: 50px; font-size: 12px;">Kód zastavení: KERNEL_DATA_INPAGE_ERROR<br>Co selhalo: synergy_occ_driver.sys</p>
+        </div>
+
+        <div id="login-layer">
+            <div style="font-size:10px; color:#666; margin-bottom:5px">PŘIHLÁŠENÍ ŘIDIČE</div>
+            <div class="login-lcd" id="log-lcd">ID?</div>
+            <div class="numpad" style="background:transparent; width: 260px;">
+                <button class="key" onclick="kL(1)">1</button><button class="key" onclick="kL(2)">2</button><button class="key" onclick="kL(3)">3</button>
+                <button class="key" onclick="kL(4)">4</button><button class="key" onclick="kL(5)">5</button><button class="key" onclick="kL(6)">6</button>
+                <button class="key" onclick="kL(7)">7</button><button class="key" onclick="kL(8)">8</button><button class="key" onclick="kL(9)">9</button>
+                <button class="key small" onclick="clearL()">CLR</button><button class="key" onclick="kL(0)">0</button><button class="key green" onclick="submitL()">OK</button>
+            </div>
+        </div>
+
+        <div id="menu-layer">
+            <div class="menu-grid">
+                <div class="menu-btn active" id="m-line" onclick="setMT('line')"><label>LINKA</label><b id="v-m-line">790968</b></div>
+                <div class="menu-btn" id="m-spoj" onclick="setMT('spoj')"><label>SPOJ</label><b id="v-m-spoj">2</b></div>
+                <div class="menu-btn" id="m-kurz" onclick="setMT('kurz')"><label>KURZ</label><b id="v-m-kurz">101</b></div>
+                <div class="menu-btn" style="grid-column: span 3"><label>DOPRAVCE</label><input type="text" id="v-m-carrier" value="Arriva Morava"></div>
+            </div>
+            <div class="editor-area" id="edit-box"></div>
+            <button onclick="addS()" style="width:100%; padding:8px; background:var(--syn-green); border:none; color:#fff; font-weight:bold; margin-bottom:5px">+ PŘIDAT ZASTÁVKU</button>
+            <div class="numpad" style="max-width:260px; margin: 0 auto">
+                <button class="key" onclick="kM(7)">7</button><button class="key" onclick="kM(8)">8</button><button class="key" onclick="kM(9)">9</button>
+                <button class="key" onclick="kM(4)">4</button><button class="key" onclick="kM(5)">5</button><button class="key" onclick="kM(6)">6</button>
+                <button class="key" onclick="kM(1)">1</button><button class="key" onclick="kM(2)">2</button><button class="key" onclick="kM(3)">3</button>
+                <button class="key small" onclick="clearM()">C</button><button class="key" onclick="kM(0)">0</button><button class="key green" onclick="saveMenu()">ULOŽIT</button>
+            </div>
+            <button onclick="closeMenu()" style="margin-top:10px; background:var(--syn-red); border:none; color:white; padding:5px">ZAVŘÍT</button>
+        </div>
+
+        <div id="app-layer">
+            <div id="special-overlay">
+                <h1 id="spec-h" style="color:var(--gold); font-size:40px">PAUZA</h1>
+                <p id="spec-p" style="font-size:22px; margin:20px 0">00:00</p>
+                <button onclick="openMenu()" style="padding:15px 30px; background:var(--syn-blue); border:none; color:#fff">MENU / KONEC</button>
+            </div>
+
+            <div class="top-info">
+                <span id="st-ids">790968 / 2 (K:101)</span>
+                <span id="st-carrier" style="color:var(--gold)">Arriva Morava</span>
+                <div id="st-delay" style="background:#333; padding:2px 8px; border-radius:4px">+0 m</div>
+                <span id="st-clock">00:00:00</span>
+            </div>
+
+            <div class="main-container">
+                <div class="iti-view" id="iti-box"></div>
+                <div class="numpad">
+                    <button class="key small" onclick="triggerCrash()">ZÓN</button><button class="key" onclick="kA(7)">7</button><button class="key" onclick="kA(8)">8</button><button class="key" onclick="kA(9)">9</button>
+                    <button class="key small">TAR</button><button class="key" onclick="kA(4)">4</button><button class="key" onclick="kA(5)">5</button><button class="key" onclick="kA(6)">6</button>
+                    <button class="key small">KAR</button><button class="key" onclick="kA(1)">1</button><button class="key" onclick="kA(2)">2</button><button class="key" onclick="kA(3)">3</button>
+                    <button class="key small" onclick="clearA()">STO</button><button class="key" onclick="kA(0)">0</button><button class="key orange tall" onclick="nextS()">DALŠÍ</button>
+                    <button class="key green wide" onclick="doSale()">OK</button>
+                </div>
+            </div>
+
+            <div class="price-tag" id="price-val">11,00 Kč</div>
+
+            <div class="ticket-area">
+                <button class="t-btn sys" onclick="openMenu()">MENU</button>
+                <button class="t-btn active" onclick="setPr(this, 11)">Obyčejné</button>
+                <button class="t-btn" onclick="setPr(this, 5)">Dítě</button>
+                <button class="t-btn" onclick="setPr(this, 8)">Student</button>
+                <button class="t-btn" onclick="setPr(this, 0)">ZTP</button>
+                <button class="t-btn" onclick="setPr(this, 7)">Pes</button>
+                <button class="t-btn" onclick="setPr(this, 0)">Zavaz.</button>
+                <button class="t-btn sys" style="background:var(--syn-red)" onclick="location.reload()">OFF</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let state = {
+        booting: false, crashed: false, logStep: 1, logBuf: "", mTarget: 'line',
+        line: "790968", spoj: "2", kurz: "101", carrier: "Arriva Morava",
+        stops: [
+            {n: "Ostrava,,ÚAN", t: "08:00"}, {n: "Ostrava,,Vítkovice", t: "08:15"},
+            {n: "Frýdek-Místek,,u estakády", t: "08:40"}, {n: "Palkovice,,střed", t: "09:00"}
+        ],
+        idx: 0, price: 11
+    };
+
+    const AU = new (window.AudioContext || window.webkitAudioContext)();
+    function beep(f, d, t="sine") {
+        const o=AU.createOscillator(); const g=AU.createGain();
+        o.type=t; o.frequency.value=f; o.connect(g); g.connect(AU.destination);
+        g.gain.setValueAtTime(0.1, AU.currentTime); g.gain.exponentialRampToValueAtTime(0.01, AU.currentTime+d);
+        o.start(); o.stop(AU.currentTime+d);
+    }
+
+    // --- SOUNDS ---
+    const sndLogin = () => { beep(1000, 0.1); setTimeout(() => beep(1200, 0.1), 80); };
+    const sndSale = () => { beep(1500, 0.2, "square"); };
+    const sndGong = () => { beep(400, 0.4, "triangle"); setTimeout(() => beep(300, 0.5, "triangle"), 250); };
+    const sndAlert = () => { beep(2000, 0.5); };
+
+    // --- 3 MINUTE BOOT ---
+    async function masterBoot() {
+        if(state.booting || state.crashed) { location.reload(); return; }
+        state.booting = true;
+        const l = document.getElementById('boot-layer');
+        const txt = document.getElementById('boot-txt');
+        const bar = document.getElementById('boot-bar');
+        l.style.display = 'block';
+
+        const logs = [
+            "SYNERGY APEX BIOS v17.0.0", "CPU: Industrial OctaCore @ 3.2GHz", "RAM: 16384MB ECC... Checking",
+            "Memory Page 0x000000 to 0xFFFFFF [OK]", "Testing Storage I/O... 420MB/s", "Mounting /dev/nvme0n1p1...",
+            "Loading Linux Kernel 6.1.0-synergy...", "Initializing Graphics (Wayland)...", "Starting Network Management...",
+            "LTE-Advanced Cat20: Searching...", "Registered on Arriva-Internal-Net", "Syncing GPS Galileo... Fix OK",
+            "Loading Route Database (Stops: 14502)...", "Checking Printer Head Temperature... 24°C",
+            "Calibrating Ticket Cutter...", "Verifying Driver Digital Certificates...", "Starting GUI Server...",
+            "System Integrity: 100%", "Ready."
+        ];
+
+        let totalTime = 180000; // 3 minuty
+        let step = totalTime / logs.length;
+
+        for(let i=0; i<logs.length; i++) {
+            txt.innerHTML += `<div>[${(new Date()).toLocaleTimeString()}] ${logs[i]}</div>`;
+            bar.style.width = ((i+1)/logs.length)*100 + "%";
+            txt.scrollTop = txt.scrollHeight;
+            await new Promise(r => setTimeout(r, step));
+            if(Math.random() < 0.05) triggerCrash(); // Možnost pádu i při bootu
+            if(state.crashed) return;
+        }
+
+        l.style.display = 'none';
+        document.getElementById('login-layer').style.display = 'flex';
+    }
+
+    // --- LOGIN ---
+    function kL(n) { state.logBuf += n; updL(); }
+    function clearL() { state.logBuf = ""; updL(); }
+    function updL() { document.getElementById('log-lcd').innerText = state.logStep === 1 ? (state.logBuf || "ID?") : "*".repeat(state.logBuf.length); }
+    function submitL() {
+        if(state.logStep === 1) { state.logStep=2; state.logBuf=""; updL(); }
+        else {
+            sndLogin();
+            document.getElementById('login-layer').style.display='none';
+            document.getElementById('app-layer').style.display='flex';
+            startApp();
+        }
+    }
+
+    // --- CRASH LOGIC ---
+    function triggerCrash() {
+        state.crashed = true;
+        document.getElementById('crash-layer').style.display = 'block';
+        sndAlert();
+    }
+
+    // --- APP ---
+    function startApp() {
+        updateUI();
+        setInterval(() => {
+            if(state.crashed) return;
+            const now = new Date();
+            document.getElementById('st-clock').innerText = now.toLocaleTimeString('cs-CZ');
+            // Náhodný pád (šance 1:2000 každou sekundu)
+            if(Math.random() < 0.0005) triggerCrash();
+        }, 1000);
+    }
+
+    function updateUI() {
+        document.getElementById('st-ids').innerText = `${state.line} / ${state.spoj} (K:${state.kurz})`;
+        document.getElementById('st-carrier').innerText = state.carrier;
+        const box = document.getElementById('iti-box');
+        box.innerHTML = "";
+        state.stops.forEach((s, i) => {
+            box.innerHTML += `<div class="iti-row ${i===state.idx?'active':''}"><div>${s.t}</div><div>25|</div><div>${s.n}</div></div>`;
+        });
+    }
+
+    function nextS() {
+        if(state.idx < state.stops.length-1) { state.idx++; sndGong(); updateUI(); }
+    }
+
+    function setPr(btn, p) {
+        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); state.price = p;
+        document.getElementById('price-val').innerText = p.toFixed(2).replace('.',',') + " Kč";
+    }
+
+    function doSale() { sndSale(); alert("TISK JÍZDENKY..."); }
+
+    // --- MENU ---
+    function openMenu() { document.getElementById('menu-layer').style.display='flex'; renderE(); }
+    function closeMenu() { document.getElementById('menu-layer').style.display='none'; }
+    function setMT(t) {
+        state.mTarget = t;
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('m-'+t).classList.add('active');
+    }
+    function kM(n) {
+        let el = document.getElementById('v-m-'+state.mTarget);
+        el.innerText = el.innerText === "0" ? n : el.innerText + n;
+    }
+    function clearM() { document.getElementById('v-m-'+state.mTarget).innerText = "0"; }
+
+    function renderE() {
+        const box = document.getElementById('edit-box'); box.innerHTML = "";
+        state.stops.forEach((s, i) => {
+            box.innerHTML += `<div class="stop-row-edit">
+                <input type="text" value="${s.n}" onchange="state.stops[${i}].n=this.value">
+                <input type="text" value="${s.t}" onchange="state.stops[${i}].t=this.value">
+                <button onclick="state.stops.splice(${i},1);renderE()" style="background:red;color:white;border:none">X</button>
+            </div>`;
+        });
+    }
+    function addS() { state.stops.push({n:"Nová", t:"12:00"}); renderE(); }
+    function saveMenu() {
+        state.line = document.getElementById('v-m-line').innerText;
+        state.spoj = document.getElementById('v-m-spoj').innerText;
+        state.kurz = document.getElementById('v-m-kurz').innerText;
+        state.carrier = document.getElementById('v-m-carrier').value;
+        if(state.line === "10836102") {
+            document.getElementById('special-overlay').style.display = 'flex';
+            sndAlert();
+        } else {
+            document.getElementById('special-overlay').style.display = 'none';
+        }
+        updateUI(); closeMenu();
+    }
+    function kA(n) {} function clearA() {}
+</script>
+</body>
+</html>
