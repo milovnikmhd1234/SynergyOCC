@@ -3,334 +3,952 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Synergy OCC Apex v17.0</title>
+    <title>Synergy OCC v18.0 Titan</title>
     <style>
         :root {
-            --syn-blue: #004b93; --syn-orange: #f39200; --syn-green: #28a745;
-            --syn-red: #dc3545; --syn-dark: #05080a; --gold: #ffcc00;
-            --white: #ffffff; --bsod: #0000aa;
+            /* Color Palette - Industrial Grade */
+            --syn-blue: #004b93;
+            --syn-blue-dark: #002d5a;
+            --syn-orange: #f39200;
+            --syn-green: #28a745;
+            --syn-red: #dc3545;
+            --syn-dark: #0a0e14;
+            --syn-bg: #12181f;
+            --gold: #ffcc00;
+            --lcd-green: #00ff41;
+            --white: #ffffff;
+            --grey-100: #f7fafc;
+            --grey-400: #a0aec0;
+            --grey-700: #2d3748;
+            --grey-800: #1a202c;
+            --grey-900: #171923;
+            --bsod-blue: #0000aa;
+            
+            /* UI Constants */
+            --shadow: 0 4px 6px rgba(0,0,0,0.3);
+            --border-rad: 2px;
+            --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; font-family: 'Consolas', monospace; user-select: none; }
-        body { background-color: #000; height: 100vh; width: 100vw; display: flex; overflow: hidden; color: var(--white); }
+        /* Base Setup */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            user-select: none;
+        }
 
-        #chassis { width: 100%; height: 100%; background: #111; position: relative; border: 4px solid #222; }
+        body {
+            background-color: #000;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--white);
+        }
 
-        /* BOOT LAYER - 3 MINUTE VERSION */
+        /* Physical Chassis Simulation */
+        #terminal-chassis {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2c2c2c 0%, #111 100%);
+            border: 12px solid #1a1a1a;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.8), 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        #screen-area {
+            flex: 1;
+            margin: 4px;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Screen Glitch & Scanline Effect */
+        #screen-area::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 50000;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* --------------------------------------------------
+           BOOT LAYER 
+        -------------------------------------------------- */
         #boot-layer {
-            position: absolute; top:0; left:0; width:100%; height:100%; background:#000; z-index:30000;
-            padding:30px; color:#00ff41; font-size:10px; line-height:1.1; overflow:hidden; display:none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 45000;
+            padding: 40px;
+            color: var(--lcd-green);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            line-height: 1.3;
+            overflow: hidden;
+            display: none;
         }
-        .boot-bar-wrap { width: 100%; height: 4px; background: #222; margin-top: 15px; }
-        #boot-bar { height: 100%; background: #00ff41; width: 0%; }
 
-        /* CRASH LAYER (BSOD) */
+        .boot-header {
+            font-size: 18px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--lcd-green);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #boot-log {
+            height: 70%;
+            overflow-y: hidden;
+            margin-bottom: 20px;
+        }
+
+        .boot-progress-container {
+            width: 100%;
+            height: 15px;
+            border: 1px solid var(--lcd-green);
+            padding: 2px;
+        }
+
+        #boot-progress-bar {
+            height: 100%;
+            background: var(--lcd-green);
+            width: 0%;
+        }
+
+        /* --------------------------------------------------
+           CRASH LAYER 
+        -------------------------------------------------- */
         #crash-layer {
-            position: absolute; top:0; left:0; width:100%; height:100%; background:var(--bsod); z-index:40000;
-            padding:50px; display:none; color:#fff; font-family: sans-serif;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bsod-blue);
+            z-index: 60000;
+            padding: 60px;
+            display: none;
+            color: #fff;
+            font-family: var(--font-mono);
         }
 
-        /* LOGIN LAYER */
+        .crash-title { font-size: 80px; margin-bottom: 30px; }
+        .crash-msg { font-size: 20px; margin-bottom: 40px; line-height: 1.5; }
+
+        /* --------------------------------------------------
+           LOGIN LAYER 
+        -------------------------------------------------- */
         #login-layer {
-            position: absolute; top:0; left:0; width:100%; height:100%; background: #0a0a0a; z-index:20000;
-            display:none; flex-direction:column; align-items:center; justify-content:center;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a202c, #000);
+            z-index: 30000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        .login-lcd { background:#000; color:var(--gold); font-size:28px; width:260px; height:50px; line-height:50px; text-align:center; border:2px solid #444; margin-bottom:20px; }
 
-        /* MENU / EDITOR */
-        #menu-layer {
-            position: absolute; top:0; left:0; width:100%; height:100%; background:var(--syn-dark); z-index:15000;
-            display:none; flex-direction:column; padding:15px;
+        .login-box {
+            background: var(--grey-800);
+            padding: 30px;
+            border: 1px solid var(--grey-700);
+            width: 320px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
-        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-        .menu-btn { background: #111; border: 1px solid #333; padding: 8px; text-align: center; }
-        .menu-btn.active { border-color: var(--gold); background: #222; }
-        .menu-btn label { font-size: 8px; color: #888; display: block; }
-        .menu-btn b { color: var(--gold); font-size: 13px; }
 
-        .editor-area { flex: 1; background: #000; border: 1px solid #333; overflow-y: auto; margin-bottom: 10px; padding: 5px; }
-        .stop-row-edit { display: grid; grid-template-columns: 1fr 60px 30px; gap: 4px; margin-bottom: 4px; }
-        .stop-row-edit input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 4px; font-size: 11px; }
+        #login-display {
+            background: #000;
+            color: var(--gold);
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            font-size: 32px;
+            font-family: var(--font-mono);
+            border: 2px solid var(--grey-700);
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+        }
 
-        /* APP LAYER */
-        #app-layer { display: none; flex-direction: column; height: 100%; }
-        .top-info { height: 35px; background: #000; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 12px; }
-        
-        .main-container { flex: 1; display: grid; grid-template-columns: 1fr 120px; background: #222; gap: 1px; overflow: hidden; }
-        
-        /* ITINERARY - WIDE */
-        .iti-view { background: #fff; color: #000; overflow-y: auto; }
-        .iti-row { display: grid; grid-template-columns: 50px 30px 1fr; padding: 12px 10px; border-bottom: 1px solid #eee; font-size: 14px; align-items: center; }
-        .iti-row.active { background: var(--syn-orange); color: #fff; font-weight: bold; border-left: 8px solid var(--syn-blue); }
+        /* --------------------------------------------------
+           MAIN INTERFACE 
+        -------------------------------------------------- */
+        #app-layer {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            background: var(--syn-bg);
+        }
 
-        /* NUMPAD - SLIM */
-        .numpad { background: #0a0c10; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; padding: 1px; }
-        .key { background: #1c2530; color: #fff; border: none; font-size: 18px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .key:active { background: #3d4652; }
+        /* Top Bar */
+        .status-bar {
+            height: 40px;
+            background: #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--grey-700);
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        .status-left { display: flex; gap: 20px; }
+        .status-right { display: flex; gap: 15px; align-items: center; }
+
+        .indicator { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .ind-green { background: var(--syn-green); box-shadow: 0 0 5px var(--syn-green); }
+        .ind-red { background: var(--syn-red); box-shadow: 0 0 5px var(--syn-red); }
+        .ind-orange { background: var(--syn-orange); box-shadow: 0 0 5px var(--syn-orange); }
+
+        /* Main Workspace */
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 120px; /* Slim Numpad */
+            gap: 1px;
+            background: var(--grey-700);
+            overflow: hidden;
+        }
+
+        /* Itinerary List */
+        .itinerary {
+            background: #fff;
+            color: #000;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .itinerary-row {
+            display: grid;
+            grid-template-columns: 60px 40px 1fr 60px;
+            padding: 15px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 16px;
+            align-items: center;
+        }
+
+        .itinerary-row.active {
+            background: var(--syn-orange);
+            color: #fff;
+            font-weight: 900;
+            border-left: 10px solid var(--syn-blue);
+        }
+
+        .itinerary-row.passed {
+            background: #f8fafc;
+            color: #cbd5e0;
+        }
+
+        /* Numpad Styling */
+        .numpad {
+            background: var(--grey-900);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+        }
+
+        .key {
+            background: #2d3748;
+            color: white;
+            border: none;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 55px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .key:active { background: var(--syn-blue); }
         .key.orange { background: var(--syn-orange); }
         .key.green { background: var(--syn-green); }
         .key.blue { background: var(--syn-blue); }
         .key.wide { grid-column: span 2; }
-        .key.tall { grid-row: span 2; height: 101px; }
-        .key.small { font-size: 9px; color: #718096; }
+        .key.tall { grid-row: span 2; height: 111px; }
+        .key.small { font-size: 10px; color: var(--grey-400); text-transform: uppercase; }
 
-        /* TICKETS */
-        .ticket-area { height: 100px; background: #000; display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; padding: 1px; }
-        .t-btn { background: var(--syn-blue); color: white; border: none; font-size: 9px; font-weight: bold; text-transform: uppercase; }
-        .t-btn.active { background: var(--gold); color: #000; }
-        .t-btn.sys { background: #222; color: var(--gold); }
+        /* Ticket Sales Footer */
+        .fare-panel {
+            height: 120px;
+            background: #000;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: 1fr 1fr;
+            gap: 2px;
+            padding: 2px;
+        }
 
-        .price-tag { position: absolute; bottom: 105px; right: 130px; font-size: 30px; font-weight: 900; color: var(--syn-red); text-shadow: 1px 1px 0 #fff; pointer-events: none; }
+        .fare-btn {
+            background: var(--syn-blue-dark);
+            color: white;
+            border: none;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
 
-        /* OVERLAYS */
-        #special-overlay { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 10000; display:none; flex-direction:column; align-items:center; justify-content:center; background:#000; text-align:center; }
+        .fare-btn.active { background: var(--gold); color: #000; }
+        .fare-btn.sys { background: var(--grey-800); color: var(--gold); }
+        .fare-btn span { font-size: 14px; margin-top: 4px; }
 
-        /* MUSHROOM */
-        #mush-btn { position: absolute; bottom: 20px; left: 20px; width: 60px; height: 60px; background: #333; border-radius: 50%; z-index: 50000; display: flex; align-items: center; justify-content: center; font-size: 25px; border: 3px solid #444; cursor: pointer; }
+        /* Price Floating Display */
+        .price-display {
+            position: absolute;
+            bottom: 125px;
+            right: 130px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: 2px solid var(--syn-red);
+            color: var(--syn-red);
+            font-size: 32px;
+            font-weight: 900;
+            font-family: var(--font-mono);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* --------------------------------------------------
+           MENU & SETTINGS 
+        -------------------------------------------------- */
+        #menu-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--syn-dark);
+            z-index: 25000;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .menu-field {
+            background: #111;
+            border: 1px solid #333;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .menu-field.active { border-color: var(--gold); background: #1a1a10; }
+        .menu-field label { font-size: 9px; color: #777; display: block; margin-bottom: 4px; }
+        .menu-field b { font-size: 16px; color: var(--gold); font-family: var(--font-mono); }
+        .menu-field input { background: none; border: none; color: #fff; font-size: 16px; width: 100%; outline: none; }
+
+        .stop-editor {
+            flex: 1;
+            background: #000;
+            border: 1px solid #222;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding: 10px;
+        }
+
+        .stop-row-item {
+            display: grid;
+            grid-template-columns: 1fr 80px 40px;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .stop-row-item input {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        /* --------------------------------------------------
+           DIAGNOSTICS PANEL 
+        -------------------------------------------------- */
+        #diag-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 28000;
+            display: none;
+            padding: 30px;
+            font-family: var(--font-mono);
+            color: #ccc;
+        }
+
+        .diag-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .diag-card {
+            border: 1px solid #333;
+            padding: 15px;
+        }
+
+        .diag-card h4 { color: var(--gold); margin-bottom: 10px; font-size: 14px; text-transform: uppercase; }
+        .diag-line { font-size: 11px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .val-ok { color: var(--syn-green); }
+
+        /* --------------------------------------------------
+           SPECIAL MODES (PAUZA/SLUZEBNI) 
+        -------------------------------------------------- */
+        #special-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 22000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            text-align: center;
+        }
+
+        .pauza-box { border: 10px double var(--syn-blue); padding: 40px; animation: glow 2s infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 10px var(--syn-blue); } to { box-shadow: 0 0 40px var(--syn-blue); } }
+
+        /* 🍄 POWER BUTTON */
+        #master-switch {
+            position: absolute;
+            bottom: 30px; left: 30px;
+            width: 70px; height: 70px;
+            background: #222;
+            border: 5px solid #333;
+            border-radius: 50%;
+            z-index: 100000;
+            display: flex;
+            justify-content: center; align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        #master-switch:active { transform: scale(0.95); background: #111; }
+
     </style>
 </head>
 <body>
 
-<div id="chassis">
-    <div id="mush-btn" onclick="masterBoot()">🍄</div>
+<div id="terminal-chassis">
+    <div id="master-switch" onclick="TitanKernel.powerOn()">🍄</div>
 
-    <div id="screen">
+    <div id="screen-area">
+        
         <div id="boot-layer">
-            <div id="boot-txt"></div>
-            <div class="boot-bar-wrap"><div id="boot-bar"></div></div>
+            <div class="boot-header">
+                <span>SYNERGY TITAN BIOS v18.0.4</span>
+                <span id="boot-timer">00:00</span>
+            </div>
+            <div id="boot-log"></div>
+            <div style="font-size: 10px; margin-bottom: 5px;">SYSTEM INITIALIZATION PROGRESS</div>
+            <div class="boot-progress-container">
+                <div id="boot-progress-bar"></div>
+            </div>
         </div>
 
         <div id="crash-layer">
-            <h1>:(</h1>
-            <p style="margin: 20px 0; font-size: 20px;">V počítači došlo k problému a je třeba jej restartovat.</p>
-            <p>Právě shromažďujeme určité informace o chybách a následně provedeme restart. (0% hotovo)</p>
-            <p style="margin-top: 50px; font-size: 12px;">Kód zastavení: KERNEL_DATA_INPAGE_ERROR<br>Co selhalo: synergy_occ_driver.sys</p>
+            <div class="crash-title">:(</div>
+            <div class="crash-msg">
+                V systému Synergy OCC došlo k neočekávané chybě (FATAL_KERNEL_ERROR).<br>
+                Právě shromažďujeme informace o chybě. Po dokončení bude nutný manuální restart.<br><br>
+                Kód chyby: <span id="crash-code">0x000000EF</span><br>
+                Proces: <span id="crash-process">UI_RENDERER_CORE</span>
+            </div>
+            <div style="font-size: 14px; opacity: 0.7;">Pro restart stiskněte hlavní vypínač 🍄</div>
         </div>
 
         <div id="login-layer">
-            <div style="font-size:10px; color:#666; margin-bottom:5px">PŘIHLÁŠENÍ ŘIDIČE</div>
-            <div class="login-lcd" id="log-lcd">ID?</div>
-            <div class="numpad" style="background:transparent; width: 260px;">
-                <button class="key" onclick="kL(1)">1</button><button class="key" onclick="kL(2)">2</button><button class="key" onclick="kL(3)">3</button>
-                <button class="key" onclick="kL(4)">4</button><button class="key" onclick="kL(5)">5</button><button class="key" onclick="kL(6)">6</button>
-                <button class="key" onclick="kL(7)">7</button><button class="key" onclick="kL(8)">8</button><button class="key" onclick="kL(9)">9</button>
-                <button class="key small" onclick="clearL()">CLR</button><button class="key" onclick="kL(0)">0</button><button class="key green" onclick="submitL()">OK</button>
+            <div style="color: var(--grey-400); font-size: 11px; margin-bottom: 10px; text-transform: uppercase;">Zadejte osobní identifikační číslo</div>
+            <div id="login-display">ID?</div>
+            <div class="numpad" style="width: 280px; background: none;">
+                <button class="key" onclick="TitanUI.pressLogin(1)">1</button>
+                <button class="key" onclick="TitanUI.pressLogin(2)">2</button>
+                <button class="key" onclick="TitanUI.pressLogin(3)">3</button>
+                <button class="key" onclick="TitanUI.pressLogin(4)">4</button>
+                <button class="key" onclick="TitanUI.pressLogin(5)">5</button>
+                <button class="key" onclick="TitanUI.pressLogin(6)">6</button>
+                <button class="key" onclick="TitanUI.pressLogin(7)">7</button>
+                <button class="key" onclick="TitanUI.pressLogin(8)">8</button>
+                <button class="key" onclick="TitanUI.pressLogin(9)">9</button>
+                <button class="key small" onclick="TitanUI.clearLogin()">SMAZAT</button>
+                <button class="key" onclick="TitanUI.pressLogin(0)">0</button>
+                <button class="key green" onclick="TitanUI.submitLogin()">OK</button>
+            </div>
+        </div>
+
+        <div id="app-layer">
+            
+            <div id="special-overlay">
+                <div class="pauza-box">
+                    <h1 id="spec-title" style="color:var(--gold); font-size: 50px;">PAUZA</h1>
+                    <div id="spec-timer" style="font-size: 30px; margin-top: 20px; font-family: var(--font-mono);">15:00</div>
+                    <button class="key blue" style="margin-top: 40px; padding: 20px 40px;" onclick="TitanUI.toggleMenu(true)">NASTAVENÍ / KONEC</button>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-left">
+                    <span id="st-route">790968 / 2</span>
+                    <span id="st-course">K: 101</span>
+                    <span id="st-carrier" style="color: var(--syn-orange);">IDSJMK</span>
+                </div>
+                <div class="status-right">
+                    <div id="st-delay" style="background: #222; padding: 2px 10px; border-radius: 3px;">+0 min</div>
+                    <span id="st-clock">00:00:00</span>
+                    <span class="indicator ind-green" id="ind-gps"></span>
+                </div>
+            </div>
+
+            <div class="workspace">
+                <div class="itinerary" id="iti-list">
+                    </div>
+
+                <div class="numpad">
+                    <button class="key small" onclick="TitanKernel.randomCrash()">ZÓNA</button>
+                    <button class="key" onclick="TitanUI.pressApp(7)">7</button>
+                    <button class="key" onclick="TitanUI.pressApp(8)">8</button>
+                    <button class="key" onclick="TitanUI.pressApp(9)">9</button>
+                    
+                    <button class="key small">TARIF</button>
+                    <button class="key" onclick="TitanUI.pressApp(4)">4</button>
+                    <button class="key" onclick="TitanUI.pressApp(5)">5</button>
+                    <button class="key" onclick="TitanUI.pressApp(6)">6</button>
+                    
+                    <button class="key small">KARTA</button>
+                    <button class="key" onclick="TitanUI.pressApp(1)">1</button>
+                    <button class="key" onclick="TitanUI.pressApp(2)">2</button>
+                    <button class="key" onclick="TitanUI.pressApp(3)">3</button>
+                    
+                    <button class="key small" onclick="TitanUI.clearApp()">STOR</button>
+                    <button class="key" onclick="TitanUI.pressApp(0)">0</button>
+                    <button class="key orange tall" onclick="TitanUI.nextStop()">DALŠÍ</button>
+                    
+                    <button class="key green wide" onclick="TitanUI.confirmSale()">POTVRDIT</button>
+                </div>
+            </div>
+
+            <div class="price-display" id="app-price-val">11,00 Kč</div>
+
+            <div class="fare-panel">
+                <button class="fare-btn sys" onclick="TitanUI.toggleMenu(true)">MENU</button>
+                <button class="fare-btn active" onclick="TitanUI.setPrice(this, 11)">Obyčejné<span>11,-</span></button>
+                <button class="fare-btn" onclick="TitanUI.setPrice(this, 5)">Dítě<span>5,-</span></button>
+                <button class="fare-btn" onclick="TitanUI.setPrice(this, 8)">Student<span>8,-</span></button>
+                <button class="fare-btn" onclick="TitanUI.setPrice(this, 8)">Senior<span>8,-</span></button>
+                <button class="fare-btn" onclick="TitanUI.setPrice(this, 0)">ZTP<span>0,-</span></button>
+                <button class="fare-btn" onclick="TitanUI.setPrice(this, 7)">Pes<span>7,-</span></button>
+                <button class="fare-btn" onclick="TitanUI.setPrice(this, 0)">Zavaz.<span>0,-</span></button>
+                <button class="fare-btn sys" onclick="TitanUI.toggleDiag(true)">DIAG</button>
+                <button class="fare-btn sys" style="background: var(--syn-red);" onclick="location.reload()">OFF</button>
             </div>
         </div>
 
         <div id="menu-layer">
+            <h2 style="color: var(--gold); margin-bottom: 20px; text-align: center; letter-spacing: 2px;">SYNERGY TERMINAL SETUP</h2>
+            
             <div class="menu-grid">
-                <div class="menu-btn active" id="m-line" onclick="setMT('line')"><label>LINKA</label><b id="v-m-line">790968</b></div>
-                <div class="menu-btn" id="m-spoj" onclick="setMT('spoj')"><label>SPOJ</label><b id="v-m-spoj">2</b></div>
-                <div class="menu-btn" id="m-kurz" onclick="setMT('kurz')"><label>KURZ</label><b id="v-m-kurz">101</b></div>
-                <div class="menu-btn" style="grid-column: span 3"><label>DOPRAVCE</label><input type="text" id="v-m-carrier" value="Arriva Morava"></div>
-            </div>
-            <div class="editor-area" id="edit-box"></div>
-            <button onclick="addS()" style="width:100%; padding:8px; background:var(--syn-green); border:none; color:#fff; font-weight:bold; margin-bottom:5px">+ PŘIDAT ZASTÁVKU</button>
-            <div class="numpad" style="max-width:260px; margin: 0 auto">
-                <button class="key" onclick="kM(7)">7</button><button class="key" onclick="kM(8)">8</button><button class="key" onclick="kM(9)">9</button>
-                <button class="key" onclick="kM(4)">4</button><button class="key" onclick="kM(5)">5</button><button class="key" onclick="kM(6)">6</button>
-                <button class="key" onclick="kM(1)">1</button><button class="key" onclick="kM(2)">2</button><button class="key" onclick="kM(3)">3</button>
-                <button class="key small" onclick="clearM()">C</button><button class="key" onclick="kM(0)">0</button><button class="key green" onclick="saveMenu()">ULOŽIT</button>
-            </div>
-            <button onclick="closeMenu()" style="margin-top:10px; background:var(--syn-red); border:none; color:white; padding:5px">ZAVŘÍT</button>
-        </div>
-
-        <div id="app-layer">
-            <div id="special-overlay">
-                <h1 id="spec-h" style="color:var(--gold); font-size:40px">PAUZA</h1>
-                <p id="spec-p" style="font-size:22px; margin:20px 0">00:00</p>
-                <button onclick="openMenu()" style="padding:15px 30px; background:var(--syn-blue); border:none; color:#fff">MENU / KONEC</button>
-            </div>
-
-            <div class="top-info">
-                <span id="st-ids">790968 / 2 (K:101)</span>
-                <span id="st-carrier" style="color:var(--gold)">Arriva Morava</span>
-                <div id="st-delay" style="background:#333; padding:2px 8px; border-radius:4px">+0 m</div>
-                <span id="st-clock">00:00:00</span>
-            </div>
-
-            <div class="main-container">
-                <div class="iti-view" id="iti-box"></div>
-                <div class="numpad">
-                    <button class="key small" onclick="triggerCrash()">ZÓN</button><button class="key" onclick="kA(7)">7</button><button class="key" onclick="kA(8)">8</button><button class="key" onclick="kA(9)">9</button>
-                    <button class="key small">TAR</button><button class="key" onclick="kA(4)">4</button><button class="key" onclick="kA(5)">5</button><button class="key" onclick="kA(6)">6</button>
-                    <button class="key small">KAR</button><button class="key" onclick="kA(1)">1</button><button class="key" onclick="kA(2)">2</button><button class="key" onclick="kA(3)">3</button>
-                    <button class="key small" onclick="clearA()">STO</button><button class="key" onclick="kA(0)">0</button><button class="key orange tall" onclick="nextS()">DALŠÍ</button>
-                    <button class="key green wide" onclick="doSale()">OK</button>
+                <div class="menu-field active" id="mf-line" onclick="TitanUI.setMenuTarget('line')">
+                    <label>LINKA (LINE)</label><b id="mv-line">790968</b>
+                </div>
+                <div class="menu-field" id="mf-spoj" onclick="TitanUI.setMenuTarget('spoj')">
+                    <label>SPOJ (RUN)</label><b id="mv-spoj">2</b>
+                </div>
+                <div class="menu-field" id="mf-kurz" onclick="TitanUI.setMenuTarget('kurz')">
+                    <label>KURZ (COURSE)</label><b id="mv-kurz">101</b>
+                </div>
+                <div class="menu-field" style="grid-column: span 3;">
+                    <label>NÁZEV DOPRAVCE (OPERATOR)</label>
+                    <input type="text" id="mv-carrier" value="Arriva Morava">
                 </div>
             </div>
 
-            <div class="price-tag" id="price-val">11,00 Kč</div>
+            <div class="stop-editor" id="stop-editor-list">
+                </div>
 
-            <div class="ticket-area">
-                <button class="t-btn sys" onclick="openMenu()">MENU</button>
-                <button class="t-btn active" onclick="setPr(this, 11)">Obyčejné</button>
-                <button class="t-btn" onclick="setPr(this, 5)">Dítě</button>
-                <button class="t-btn" onclick="setPr(this, 8)">Student</button>
-                <button class="t-btn" onclick="setPr(this, 0)">ZTP</button>
-                <button class="t-btn" onclick="setPr(this, 7)">Pes</button>
-                <button class="t-btn" onclick="setPr(this, 0)">Zavaz.</button>
-                <button class="t-btn sys" style="background:var(--syn-red)" onclick="location.reload()">OFF</button>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="key green wide" onclick="TitanUI.addStopToEditor()">+ PŘIDAT ZASTÁVKU</button>
             </div>
+
+            <div class="numpad" style="max-width: 300px; margin: 0 auto;">
+                <button class="key" onclick="TitanUI.pressMenu(7)">7</button>
+                <button class="key" onclick="TitanUI.pressMenu(8)">8</button>
+                <button class="key" onclick="TitanUI.pressMenu(9)">9</button>
+                <button class="key" onclick="TitanUI.pressMenu(4)">4</button>
+                <button class="key" onclick="TitanUI.pressMenu(5)">5</button>
+                <button class="key" onclick="TitanUI.pressMenu(6)">6</button>
+                <button class="key" onclick="TitanUI.pressMenu(1)">1</button>
+                <button class="key" onclick="TitanUI.pressMenu(2)">2</button>
+                <button class="key" onclick="TitanUI.pressMenu(3)">3</button>
+                <button class="key small" onclick="TitanUI.clearMenu()">CLR</button>
+                <button class="key" onclick="TitanUI.pressMenu(0)">0</button>
+                <button class="key green" onclick="TitanUI.saveSettings()">ULOŽIT</button>
+            </div>
+            
+            <button class="key red" style="margin-top: 15px; background: var(--syn-red);" onclick="TitanUI.toggleMenu(false)">ZAVŘÍT BEZ ULOŽENÍ</button>
         </div>
+
+        <div id="diag-layer">
+            <h2 style="color:var(--gold); border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">SYSTEM DIAGNOSTICS v18.0</h2>
+            
+            <div class="diag-grid">
+                <div class="diag-card">
+                    <h4>Printer Module (TISK)</h4>
+                    <div class="diag-line">Stav: <span class="val-ok">READY</span></div>
+                    <div class="diag-line">Papír: <span class="val-ok">85%</span></div>
+                    <div class="diag-line">Teplota hlavy: <span>34.2 °C</span></div>
+                    <div class="diag-line">Cutter: <span class="val-ok">ALIGN OK</span></div>
+                </div>
+                <div class="diag-card">
+                    <h4>GPS / GNSS</h4>
+                    <div class="diag-line">Fix: <span class="val-ok">3D FIX</span></div>
+                    <div class="diag-line">Satelity: <span>14 (GPS:8, GAL:6)</span></div>
+                    <div class="diag-line">Přesnost: <span>0.85 m</span></div>
+                    <div class="diag-line">Anténa: <span class="val-ok">CONNECTED</span></div>
+                </div>
+                <div class="diag-card">
+                    <h4>Network (GSM/LTE)</h4>
+                    <div class="diag-line">Operátor: <span>O2-CZ (Private)</span></div>
+                    <div class="diag-line">Signál: <span>-82 dBm (EXCELLENT)</span></div>
+                    <div class="diag-line">Latence: <span>14ms</span></div>
+                    <div class="diag-line">IP: <span>10.142.0.54</span></div>
+                </div>
+                <div class="diag-card">
+                    <h4>Kernel & Memory</h4>
+                    <div class="diag-line">Uptime: <span id="diag-uptime">00:00:00</span></div>
+                    <div class="diag-line">RAM Load: <span>412MB / 8192MB</span></div>
+                    <div class="diag-line">CPU Temp: <span>48 °C</span></div>
+                    <div class="diag-line">BlackBox: <span class="val-ok">ACTIVE</span></div>
+                </div>
+            </div>
+
+            <button class="key blue" style="margin-top: 30px; width: 200px;" onclick="TitanUI.toggleDiag(false)">ZPĚT</button>
+        </div>
+
     </div>
 </div>
 
 <script>
-    let state = {
-        booting: false, crashed: false, logStep: 1, logBuf: "", mTarget: 'line',
-        line: "790968", spoj: "2", kurz: "101", carrier: "Arriva Morava",
-        stops: [
-            {n: "Ostrava,,ÚAN", t: "08:00"}, {n: "Ostrava,,Vítkovice", t: "08:15"},
-            {n: "Frýdek-Místek,,u estakády", t: "08:40"}, {n: "Palkovice,,střed", t: "09:00"}
-        ],
-        idx: 0, price: 11
+    /**
+     * SYNERGY TITAN KERNEL - MAIN LOGIC
+     */
+
+    const TitanKernel = {
+        state: {
+            isPowered: false,
+            isBooted: false,
+            uptime: 0,
+            bootSeconds: 180, // 3 Minutes
+            chaosFactor: 0.0004, // Crash probability per tick
+            crashScenarios: [
+                { code: "0x000000D1", msg: "DRIVER_IRQL_NOT_LESS_OR_EQUAL", proc: "NET_MODULE" },
+                { code: "0x00000024", msg: "NTFS_FILE_SYSTEM_ERROR", proc: "DB_SYNC" },
+                { code: "0x0000007E", msg: "SYSTEM_THREAD_EXCEPTION", proc: "UI_LOOP" },
+                { code: "0xC000021A", msg: "STATUS_SYSTEM_PROCESS_TERMINATED", proc: "SECURITY_AUTH" }
+            ]
+        },
+
+        powerOn() {
+            if (this.state.isBooted || this.state.booting) {
+                location.reload(); // Manual restart
+                return;
+            }
+            this.state.booting = true;
+            TitanUI.showLayer('boot-layer');
+            this.runBootSequence();
+        },
+
+        async runBootSequence() {
+            const logEl = document.getElementById('boot-log');
+            const bar = document.getElementById('boot-progress-bar');
+            const timer = document.getElementById('boot-timer');
+            
+            const bootMessages = [
+                "SYNERGY TITAN BIOS Ver 18.0.4.52", "Copyright (C) 2026 Synergy Systems.", "Processor: Industrial Quad-Core ARM @ 2.4GHz",
+                "Memory: 8192MB LPDDR4 OK", "Detecting Storage Devices...", "NVMe 128GB - Serial: SYN-8832-A OK",
+                "Mounting Root File System (ext4)...", "Starting Kernel 6.2.0-titan-industrial...", "Loading Hardware Abstraction Layer (HAL)...",
+                "Initializing GPIO Pins [####################] 100%", "Detecting GPS/GNSS module... FOUND (u-blox M10)",
+                "Detecting Thermal Printer... READY (Ver 4.1)", "Checking Network Connectivity...", "GSM/LTE Module initialized. Signal: -78dBm",
+                "Starting X11 Server & Synergy GUI...", "Loading Asset Bundle: UI_HD_PACK...", "Synchronizing Route Database with HQ...",
+                "DB Version: 2026.05.01-REV3", "Performing Security Integrity Check...", "Checksum SHA256: AB82..F011 OK",
+                "Starting Background Services (GPS, Print, Auth)...", "Initializing Black Box Logger...", "System ready. Welcome Driver."
+            ];
+
+            let elapsed = 0;
+            const step = this.state.bootSeconds / bootMessages.length;
+
+            for (let i = 0; i < bootMessages.length; i++) {
+                const row = document.createElement('div');
+                row.innerText = `[${this.formatTime(elapsed)}] ${bootMessages[i]}`;
+                logEl.appendChild(row);
+                logEl.scrollTop = logEl.scrollHeight;
+                
+                let progress = ((i + 1) / bootMessages.length) * 100;
+                bar.style.width = progress + "%";
+                
+                let wait = (this.state.bootSeconds * 1000) / bootMessages.length;
+                await new Promise(r => setTimeout(r, wait));
+                elapsed += step;
+                timer.innerText = this.formatTime(elapsed);
+            }
+
+            this.state.isBooted = true;
+            TitanUI.showLayer('login-layer');
+        },
+
+        formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        },
+
+        randomCrash() {
+            const scenario = this.state.crashScenarios[Math.floor(Math.random() * this.state.crashScenarios.length)];
+            document.getElementById('crash-code').innerText = scenario.code;
+            document.getElementById('crash-process').innerText = scenario.proc;
+            TitanUI.showLayer('crash-layer');
+            TitanAudio.playTone(200, 1.0, "square");
+            this.state.isBooted = false;
+        }
     };
 
-    const AU = new (window.AudioContext || window.webkitAudioContext)();
-    function beep(f, d, t="sine") {
-        const o=AU.createOscillator(); const g=AU.createGain();
-        o.type=t; o.frequency.value=f; o.connect(g); g.connect(AU.destination);
-        g.gain.setValueAtTime(0.1, AU.currentTime); g.gain.exponentialRampToValueAtTime(0.01, AU.currentTime+d);
-        o.start(); o.stop(AU.currentTime+d);
-    }
+    /**
+     * UI CONTROLLER
+     */
+    const TitanUI = {
+        data: {
+            loginBuf: "",
+            loginStep: 1, // 1: ID, 2: PIN
+            appBuf: "",
+            menuTarget: 'line',
+            currentUser: null,
+            config: {
+                line: "790968",
+                spoj: "2",
+                kurz: "101",
+                carrier: "IDSJMK"
+            },
+            stops: [
+                { n: "Brno,,ÚAN Zvonařka", t: "12:00" },
+                { n: "Brno,,Opuštěná", t: "12:04" },
+                { n: "Brno,,Hladíkova", t: "12:08" },
+                { n: "Brno,,Tržní", t: "12:11" },
+                { n: "Brno,,Černovičky", t: "12:15" },
+                { n: "Slatina,,vozovna", t: "12:20" }
+            ],
+            currentIdx: 0,
+            selectedPrice: 11
+        },
 
-    // --- SOUNDS ---
-    const sndLogin = () => { beep(1000, 0.1); setTimeout(() => beep(1200, 0.1), 80); };
-    const sndSale = () => { beep(1500, 0.2, "square"); };
-    const sndGong = () => { beep(400, 0.4, "triangle"); setTimeout(() => beep(300, 0.5, "triangle"), 250); };
-    const sndAlert = () => { beep(2000, 0.5); };
+        showLayer(id) {
+            ['boot-layer', 'crash-layer', 'login-layer', 'app-layer', 'menu-layer', 'diag-layer'].forEach(l => {
+                document.getElementById(l).style.display = (l === id) ? 'flex' : 'none';
+            });
+            if (id === 'app-layer') document.getElementById('app-layer').style.display = 'flex';
+        },
 
-    // --- 3 MINUTE BOOT ---
-    async function masterBoot() {
-        if(state.booting || state.crashed) { location.reload(); return; }
-        state.booting = true;
-        const l = document.getElementById('boot-layer');
-        const txt = document.getElementById('boot-txt');
-        const bar = document.getElementById('boot-bar');
-        l.style.display = 'block';
+        // LOGIN SYSTEM
+        pressLogin(n) { this.data.loginBuf += n; this.updateLoginUI(); },
+        clearLogin() { this.data.loginBuf = ""; this.updateLoginUI(); },
+        updateLoginUI() {
+            const disp = document.getElementById('login-display');
+            if (this.data.loginStep === 1) disp.innerText = this.data.loginBuf || "ID?";
+            else disp.innerText = "*".repeat(this.data.loginBuf.length) || "PIN?";
+        },
+        submitLogin() {
+            if (this.data.loginStep === 1) {
+                if (this.data.loginBuf.length > 2) {
+                    this.data.loginStep = 2;
+                    this.data.loginBuf = "";
+                    this.updateLoginUI();
+                    TitanAudio.playTone(800, 0.1);
+                }
+            } else {
+                TitanAudio.playConfirm();
+                this.showLayer('app-layer');
+                this.startMainLoop();
+            }
+        },
 
-        const logs = [
-            "SYNERGY APEX BIOS v17.0.0", "CPU: Industrial OctaCore @ 3.2GHz", "RAM: 16384MB ECC... Checking",
-            "Memory Page 0x000000 to 0xFFFFFF [OK]", "Testing Storage I/O... 420MB/s", "Mounting /dev/nvme0n1p1...",
-            "Loading Linux Kernel 6.1.0-synergy...", "Initializing Graphics (Wayland)...", "Starting Network Management...",
-            "LTE-Advanced Cat20: Searching...", "Registered on Arriva-Internal-Net", "Syncing GPS Galileo... Fix OK",
-            "Loading Route Database (Stops: 14502)...", "Checking Printer Head Temperature... 24°C",
-            "Calibrating Ticket Cutter...", "Verifying Driver Digital Certificates...", "Starting GUI Server...",
-            "System Integrity: 100%", "Ready."
-        ];
+        // MAIN APP SYSTEM
+        startMainLoop() {
+            this.renderItinerary();
+            this.updateStatusBar();
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('st-clock').innerText = now.toLocaleTimeString('cs-CZ');
+                document.getElementById('diag-uptime').innerText = now.toLocaleTimeString('cs-CZ');
+                this.calculateDelay(now);
+                if (Math.random() < TitanKernel.state.chaosFactor) TitanKernel.randomCrash();
+            }, 1000);
+        },
 
-        let totalTime = 180000; // 3 minuty
-        let step = totalTime / logs.length;
+        renderItinerary() {
+            const box = document.getElementById('iti-list');
+            box.innerHTML = "";
+            this.data.stops.forEach((s, i) => {
+                const row = document.createElement('div');
+                row.className = `itinerary-row ${i === this.data.currentIdx ? 'active' : ''} ${i < this.data.currentIdx ? 'passed' : ''}`;
+                row.innerHTML = `
+                    <div>${s.t}</div>
+                    <div style="font-size:10px; opacity:0.6;">25|</div>
+                    <div style="overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">${s.n}</div>
+                    <div style="text-align:right; font-size:11px;">${i+100}</div>
+                `;
+                box.appendChild(row);
+            });
+            const active = box.querySelector('.active');
+            if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        },
 
-        for(let i=0; i<logs.length; i++) {
-            txt.innerHTML += `<div>[${(new Date()).toLocaleTimeString()}] ${logs[i]}</div>`;
-            bar.style.width = ((i+1)/logs.length)*100 + "%";
-            txt.scrollTop = txt.scrollHeight;
-            await new Promise(r => setTimeout(r, step));
-            if(Math.random() < 0.05) triggerCrash(); // Možnost pádu i při bootu
-            if(state.crashed) return;
+        nextStop() {
+            if (this.data.currentIdx < this.data.stops.length - 1) {
+                this.data.currentIdx++;
+                TitanAudio.playGong();
+                this.renderItinerary();
+            }
+        },
+
+        calculateDelay(now) {
+            if (this.data.config.line === "10836102") return;
+            const [h, m] = this.data.stops[this.data.currentIdx].t.split(':');
+            const sched = new Date(); sched.setHours(h, m, 0);
+            const diff = Math.floor((now - sched) / 60000);
+            const el = document.getElementById('st-delay');
+            el.innerText = (diff >= 0 ? "+" : "") + diff + " min";
+            el.style.background = diff > 2 ? 'var(--syn-red)' : (diff < 0 ? 'var(--syn-green)' : '#222');
+        },
+
+        setPrice(btn, p) {
+            document.querySelectorAll('.fare-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.data.selectedPrice = p;
+            document.getElementById('app-price-val').innerText = p.toFixed(2).replace('.', ',') + " Kč";
+        },
+
+        confirmSale() {
+            TitanAudio.playConfirm();
+            alert("SYNERGY TICKET\n-----------------\nL: " + this.data.config.line + " / S: " + this.data.config.spoj + "\nCENA: " + this.data.selectedPrice + " CZK\nPRINTER: OK");
+        },
+
+        pressApp(n) { this.data.appBuf += n; },
+        clearApp() { this.data.appBuf = ""; },
+
+        // MENU SYSTEM
+        toggleMenu(show) { document.getElementById('menu-layer').style.display = show ? 'flex' : 'none'; if(show) this.renderMenuStops(); },
+        toggleDiag(show) { document.getElementById('diag-layer').style.display = show ? 'block' : 'none'; },
+        
+        setMenuTarget(t) {
+            this.data.menuTarget = t;
+            document.querySelectorAll('.menu-field').forEach(f => f.classList.remove('active'));
+            document.getElementById('mf-' + t).classList.add('active');
+        },
+
+        pressMenu(n) {
+            const val = document.getElementById('mv-' + this.data.menuTarget);
+            val.innerText = (val.innerText === "0" || val.innerText === "790968") ? n : val.innerText + n;
+        },
+
+        clearMenu() { document.getElementById('mv-' + this.data.menuTarget).innerText = "0"; },
+
+        renderMenuStops() {
+            const list = document.getElementById('stop-editor-list');
+            list.innerHTML = "";
+            this.data.stops.forEach((s, i) => {
+                list.innerHTML += `
+                    <div class="stop-row-item">
+                        <input type="text" value="${s.n}" onchange="TitanUI.data.stops[${i}].n=this.value">
+                        <input type="text" value="${s.t}" onchange="TitanUI.data.stops[${i}].t=this.value">
+                        <button class="key red" style="height:35px;" onclick="TitanUI.data.stops.splice(${i},1);TitanUI.renderMenuStops();">X</button>
+                    </div>
+                `;
+            });
+        },
+
+        addStopToEditor() { this.data.stops.push({ n: "Nová zastávka", t: "00:00" }); this.renderMenuStops(); },
+
+        saveSettings() {
+            this.data.config.line = document.getElementById('mv-line').innerText;
+            this.data.config.spoj = document.getElementById('mv-spoj').innerText;
+            this.data.config.kurz = document.getElementById('mv-kurz').innerText;
+            this.data.config.carrier = document.getElementById('mv-carrier').value;
+            this.data.currentIdx = 0;
+            
+            // Special codes handling
+            const overlay = document.getElementById('special-overlay');
+            overlay.style.display = (this.data.config.line === "10836102" || this.data.config.line === "6252") ? 'flex' : 'none';
+            if (this.data.config.line === "10836102") {
+                document.getElementById('spec-title').innerText = "PAUZA";
+                TitanAudio.playTone(600, 0.5);
+            } else if (this.data.config.line === "6252") {
+                document.getElementById('spec-title').innerText = "SLUŽEBNÍ JÍZDA";
+            }
+
+            this.updateStatusBar();
+            this.renderItinerary();
+            this.toggleMenu(false);
+            TitanAudio.playConfirm();
+        },
+
+        updateStatusBar() {
+            document.getElementById('st-route').innerText = `${this.data.config.line} / ${this.data.config.spoj}`;
+            document.getElementById('st-course').innerText = `K: ${this.data.config.kurz}`;
+            document.getElementById('st-carrier').innerText = this.data.config.carrier;
         }
+    };
 
-        l.style.display = 'none';
-        document.getElementById('login-layer').style.display = 'flex';
-    }
+    /**
+     * AUDIO ENGINE (Web Audio API)
+     */
+    const TitanAudio = {
+        ctx: new (window.AudioContext || window.webkitAudioContext)(),
 
-    // --- LOGIN ---
-    function kL(n) { state.logBuf += n; updL(); }
-    function clearL() { state.logBuf = ""; updL(); }
-    function updL() { document.getElementById('log-lcd').innerText = state.logStep === 1 ? (state.logBuf || "ID?") : "*".repeat(state.logBuf.length); }
-    function submitL() {
-        if(state.logStep === 1) { state.logStep=2; state.logBuf=""; updL(); }
-        else {
-            sndLogin();
-            document.getElementById('login-layer').style.display='none';
-            document.getElementById('app-layer').style.display='flex';
-            startApp();
+        playTone(freq, dur, type = "sine") {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+            osc.start();
+            osc.stop(this.ctx.currentTime + dur);
+        },
+
+        playConfirm() {
+            this.playTone(1000, 0.1);
+            setTimeout(() => this.playTone(1300, 0.1), 100);
+        },
+
+        playGong() {
+            this.playTone(440, 0.4, "triangle");
+            setTimeout(() => this.playTone(330, 0.6, "triangle"), 300);
         }
-    }
+    };
 
-    // --- CRASH LOGIC ---
-    function triggerCrash() {
-        state.crashed = true;
-        document.getElementById('crash-layer').style.display = 'block';
-        sndAlert();
-    }
-
-    // --- APP ---
-    function startApp() {
-        updateUI();
-        setInterval(() => {
-            if(state.crashed) return;
-            const now = new Date();
-            document.getElementById('st-clock').innerText = now.toLocaleTimeString('cs-CZ');
-            // Náhodný pád (šance 1:2000 každou sekundu)
-            if(Math.random() < 0.0005) triggerCrash();
-        }, 1000);
-    }
-
-    function updateUI() {
-        document.getElementById('st-ids').innerText = `${state.line} / ${state.spoj} (K:${state.kurz})`;
-        document.getElementById('st-carrier').innerText = state.carrier;
-        const box = document.getElementById('iti-box');
-        box.innerHTML = "";
-        state.stops.forEach((s, i) => {
-            box.innerHTML += `<div class="iti-row ${i===state.idx?'active':''}"><div>${s.t}</div><div>25|</div><div>${s.n}</div></div>`;
-        });
-    }
-
-    function nextS() {
-        if(state.idx < state.stops.length-1) { state.idx++; sndGong(); updateUI(); }
-    }
-
-    function setPr(btn, p) {
-        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active'); state.price = p;
-        document.getElementById('price-val').innerText = p.toFixed(2).replace('.',',') + " Kč";
-    }
-
-    function doSale() { sndSale(); alert("TISK JÍZDENKY..."); }
-
-    // --- MENU ---
-    function openMenu() { document.getElementById('menu-layer').style.display='flex'; renderE(); }
-    function closeMenu() { document.getElementById('menu-layer').style.display='none'; }
-    function setMT(t) {
-        state.mTarget = t;
-        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('m-'+t).classList.add('active');
-    }
-    function kM(n) {
-        let el = document.getElementById('v-m-'+state.mTarget);
-        el.innerText = el.innerText === "0" ? n : el.innerText + n;
-    }
-    function clearM() { document.getElementById('v-m-'+state.mTarget).innerText = "0"; }
-
-    function renderE() {
-        const box = document.getElementById('edit-box'); box.innerHTML = "";
-        state.stops.forEach((s, i) => {
-            box.innerHTML += `<div class="stop-row-edit">
-                <input type="text" value="${s.n}" onchange="state.stops[${i}].n=this.value">
-                <input type="text" value="${s.t}" onchange="state.stops[${i}].t=this.value">
-                <button onclick="state.stops.splice(${i},1);renderE()" style="background:red;color:white;border:none">X</button>
-            </div>`;
-        });
-    }
-    function addS() { state.stops.push({n:"Nová", t:"12:00"}); renderE(); }
-    function saveMenu() {
-        state.line = document.getElementById('v-m-line').innerText;
-        state.spoj = document.getElementById('v-m-spoj').innerText;
-        state.kurz = document.getElementById('v-m-kurz').innerText;
-        state.carrier = document.getElementById('v-m-carrier').value;
-        if(state.line === "10836102") {
-            document.getElementById('special-overlay').style.display = 'flex';
-            sndAlert();
-        } else {
-            document.getElementById('special-overlay').style.display = 'none';
-        }
-        updateUI(); closeMenu();
-    }
-    function kA(n) {} function clearA() {}
 </script>
 </body>
 </html>
