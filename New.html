@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Synergy OCC Clone</title>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --blue-btn: #3a86ff;
+            --yellow-active: #ffbe0b;
+            --red-delay: #d00000;
+            --border-color: #444;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            background: black;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* Hlavní kontejner - simulace orientace na šířku */
+        .app-container {
+            display: grid;
+            grid-template-columns: 80px 1fr 220px;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* LEVÝ PANEL (F1-F7) */
+        .side-panel {
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid var(--border-color);
+        }
+
+        .side-btn {
+            flex: 1;
+            border: 1px solid #333;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+        }
+
+        /* STŘEDNÍ DISPLEJ */
+        .main-display {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            color: black;
+        }
+
+        .status-bar {
+            background: black;
+            color: white;
+            padding: 5px 15px;
+            display: flex; justify-content: space-between;
+            font-family: monospace; font-size: 18px;
+        }
+
+        .delay-tag { background: var(--red-delay); padding: 0 10px; font-weight: bold; }
+
+        .stop-list { flex: 1; overflow-y: auto; }
+        .stop-row {
+            display: grid; grid-template-columns: 80px 40px 1fr;
+            padding: 8px; border-bottom: 1px solid #ccc;
+            font-weight: bold; font-size: 18px;
+        }
+
+        .price-display {
+            text-align: center; font-size: 48px; color: var(--red-delay);
+            font-weight: bold; padding: 10px; border-top: 2px solid #000;
+        }
+
+        /* TARIFNÍ TLAČÍTKA (DOLE) */
+        .tariff-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 45px);
+            background: #8ecae6;
+        }
+
+        .tariff-btn {
+            border: 1px solid #444;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 14px; cursor: pointer;
+        }
+
+        /* PRAVÝ PANEL (KLÁVESNICE) */
+        .right-panel {
+            background: #252525;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .function-keys {
+            display: grid; grid-template-columns: 1fr;
+            height: 180px;
+        }
+
+        .num-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            flex: 1;
+        }
+
+        .key {
+            border: 1px solid #444;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold; cursor: pointer;
+            background: #333; color: white;
+        }
+
+        .key-confirm { background: #38b000; }
+        .key-esc { background: #e85d04; }
+
+        /* Aktivní barvy */
+        .bg-yellow { background: var(--yellow-active); color: black; }
+        .bg-blue { background: var(--blue-btn); color: white; }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- LEVÝ PANEL -->
+    <div class="side-panel">
+        <div class="side-btn bg-yellow">Základ</div>
+        <div class="side-btn bg-blue">Dálkové</div>
+        <div class="side-btn">F3</div>
+        <div class="side-btn">F4</div>
+        <div class="side-btn">F5</div>
+        <div class="side-btn">F6</div>
+        <div class="side-btn">F7</div>
+    </div>
+
+    <!-- STŘEDNÍ ČÁST -->
+    <div class="main-display">
+        <div class="status-bar">
+            <span>25.07.24</span>
+            <span class="delay-tag">-13 m</span>
+            <span>04:22:00</span>
+            <span>790968/2</span>
+        </div>
+        
+        <div class="stop-list">
+            <div class="stop-row" style="background: #fff3b0;">
+                <span>04:35</span> <span style="color:red">25</span> <span>Studená, ul. 1. máje</span>
+            </div>
+            <div class="stop-row" style="background: #ffccbc;">
+                <span>04:38</span> <span style="color:red">24</span> <span>Studená, H. Bolíkov</span>
+            </div>
+            <div class="stop-row"><span>04:45</span> <span style="color:red">23</span> <span>Mrákotín</span></div>
+            <div class="stop-row"><span>04:49</span> <span style="color:red">22</span> <span>Krahulčí</span></div>
+            <div class="stop-row"><span>04:59</span> <span style="color:red">21</span> <span>Telč, aut. nádr.</span></div>
+        </div>
+
+        <div class="price-display">11,00 Kč</div>
+
+        <div class="tariff-grid">
+            <div class="tariff-btn bg-yellow">Základní</div>
+            <div class="tariff-btn bg-blue">Dítě</div>
+            <div class="tariff-btn bg-blue">Student</div>
+            <div class="tariff-btn bg-blue">Osoba 65</div>
+            <div class="tariff-btn bg-blue">ZTP</div>
+            <div class="tariff-btn bg-blue">Pes</div>
+            <div class="tariff-btn bg-blue">Dítě do</div>
+            <div class="tariff-btn bg-blue">NavUstav</div>
+            <div class="tariff-btn bg-blue">Inv3st.</div>
+            <div class="tariff-btn bg-blue">▶</div>
+        </div>
+    </div>
+
+    <!-- PRAVÝ PANEL -->
+    <div class="right-panel">
+        <div class="function-keys">
+            <div class="key bg-blue" style="font-size: 14px;">Přestup</div>
+            <div class="key bg-blue" style="font-size: 14px;">Multi.</div>
+            <div class="key bg-blue" style="font-size: 14px;">Karta</div>
+            <div class="key bg-blue" style="font-size: 14px;">POS</div>
+            <div class="key bg-blue" style="font-size: 14px;">Storno</div>
+        </div>
+        <div class="num-pad">
+            <div class="key">7</div> <div class="key">8</div> <div class="key">9</div>
+            <div class="key">4</div> <div class="key">5</div> <div class="key">6</div>
+            <div class="key">1</div> <div class="key">2</div> <div class="key">3</div>
+            <div class="key">.</div> <div class="key">0</div> <div class="key">±</div>
+            <div class="key">←</div> <div class="key-esc">ESC</div> <div class="key-confirm">✓</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Jednoduchá logika pro klikání
+    document.querySelectorAll('.key, .tariff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            console.log("Stisknuto: " + btn.innerText);
+            // Zde můžeme přidat logiku výpočtu
+        });
+    });
+</script>
+
+</body>
+</html>
