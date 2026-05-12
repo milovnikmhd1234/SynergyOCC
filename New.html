@@ -3,226 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Synergy OCC Pro</title>
+    <title>Synergy OCC Compact</title>
     <style>
         :root {
-            --bg-dark: #0b0b0b;
-            --blue-ui: #0066cc;
-            --yellow-ui: #ffcc00;
-            --red-ui: #cc0000;
-            --green-ui: #28a745;
-            --border: #333;
+            --bg-dark: #000;
+            --blue: #0061c0;
+            --yellow: #f1c40f;
+            --red: #c0392b;
+            --green: #27ae60;
+            --gray: #222;
         }
 
-        * { box-sizing: border-box; font-family: 'RobotoCondensed', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; font-family: Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100vw; height: 100vh; background: black; overflow: hidden; color: white; }
 
-        .app-container { display: grid; grid-template-columns: 70px 1fr 200px; height: 100vh; width: 100vw; }
+        /* Mřížka upravená pro malé rozměry */
+        .app-container { 
+            display: grid; 
+            grid-template-columns: 60px 1fr 180px; 
+            height: 100vh; 
+            width: 100vw; 
+        }
 
-        /* Strany */
-        .side-panel { display: flex; flex-direction: column; background: #111; border-right: 1px solid var(--border); }
-        .side-btn { flex: 1; border: 1px solid #222; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        
-        /* Střední displej */
+        /* Boční panely - mnohem užší */
+        .side-panel { display: flex; flex-direction: column; background: #000; border-right: 1px solid #333; }
+        .side-btn { 
+            height: 14.28%; /* Přesně na 7 tlačítek */
+            border: 0.5px solid #222; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 9px; font-weight: bold; cursor: pointer; text-align: center;
+        }
+
+        /* Hlavní displej */
         .main-display { background: white; display: flex; flex-direction: column; color: black; position: relative; }
-        .status-bar { background: black; color: white; padding: 3px 10px; display: flex; justify-content: space-between; font-size: 14px; font-family: monospace; }
-        .delay { background: var(--red-ui); padding: 0 4px; font-weight: bold; }
+        .status-bar { 
+            background: black; color: white; padding: 2px 8px; 
+            display: flex; justify-content: space-between; font-size: 11px; font-family: monospace; 
+        }
+        .delay { background: var(--red); padding: 0 4px; font-weight: bold; }
 
-        .stop-list { flex: 1; overflow-y: auto; font-size: 14px; }
-        .stop-row { display: grid; grid-template-columns: 60px 30px 1fr; padding: 5px 8px; border-bottom: 1px solid #eee; font-weight: bold; }
+        .stop-list { flex: 1; overflow-y: auto; }
+        .stop-row { 
+            display: grid; grid-template-columns: 50px 30px 1fr; 
+            padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 12px; font-weight: bold; 
+        }
 
-        .price-area { height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 2px solid black; background: #f9f9f9; }
-        #ticket-type { font-size: 12px; color: #666; text-transform: uppercase; }
-        #display-price { font-size: 40px; color: var(--red-ui); font-weight: bold; line-height: 1; }
+        /* Cenová oblast - kompaktnější */
+        .price-area { height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; border-top: 1px solid #000; }
+        #ticket-type { font-size: 10px; color: #777; }
+        #display-price { font-size: 32px; color: var(--red); font-weight: bold; margin: -5px 0; }
 
-        /* Spodní mřížka tarifů - menší tlačítka */
-        .tariff-grid { display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 35px); background: #b3e5fc; }
-        .t-btn { border: 1px solid #888; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; cursor: pointer; color: black; }
-        
-        /* Pravý panel */
-        .right-panel { background: #1a1a1a; display: flex; flex-direction: column; }
+        /* Tarifní mřížka - nízká tlačítka */
+        .tariff-grid { display: grid; grid-template-columns: repeat(5, 1fr); height: 60px; background: #8ecae6; }
+        .t-btn { border: 0.5px solid #444; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 9px; color: black; cursor: pointer; }
+
+        /* Pravý ovládací panel */
+        .right-panel { background: #111; display: flex; flex-direction: column; }
+        .top-keys { display: grid; grid-template-columns: 1fr; height: 40px; }
         .num-pad { display: grid; grid-template-columns: repeat(3, 1fr); flex: 1; }
-        .key { border: 1px solid #333; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; cursor: pointer; }
-        .key-ok { background: var(--green-ui); }
+        .key { border: 0.5px solid #333; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; color: white; }
+        .key-ok { background: var(--green); }
         .key-esc { background: #e67e22; }
 
-        /* Menu Overlay */
+        /* Menu */
         #menu-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: #111; color: white; display: none; z-index: 100;
-            grid-template-columns: 1fr 1fr; padding: 10px; gap: 8px;
+            grid-template-columns: 1fr 1fr; padding: 10px; gap: 5px;
         }
-        .menu-input { background: #222; border: 1px solid var(--blue-ui); padding: 8px; border-radius: 4px; }
-        .menu-input label { display: block; font-size: 10px; color: #aaa; }
-        .menu-input input { background: transparent; border: none; color: white; width: 100%; font-size: 16px; outline: none; }
-        .save-btn { grid-column: span 2; background: var(--blue-ui); padding: 10px; text-align: center; font-weight: bold; border-radius: 4px; }
+        .menu-input { background: #222; border: 1px solid var(--blue); padding: 5px; border-radius: 3px; font-size: 12px; }
+        .menu-input input { background: transparent; border: none; color: white; width: 100%; outline: none; }
 
-        /* Pomocné třídy */
-        .bg-yellow { background: var(--yellow-ui); color: black; }
-        .bg-blue { background: var(--blue-ui); color: white; }
+        .bg-yellow { background: var(--yellow); color: black; }
+        .bg-blue { background: var(--blue); color: white; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
+    <!-- LEVÝ SLOUPEC -->
     <div class="side-panel">
-        <div class="side-btn bg-yellow" onclick="beep()">Základ</div>
-        <div class="side-btn bg-blue" onclick="beep()">Dálkové</div>
+        <div class="side-btn bg-yellow" onclick="beep()">ZÁKLAD</div>
+        <div class="side-btn bg-blue" onclick="beep()">DÁLKOVÉ</div>
         <div class="side-btn bg-blue" onclick="toggleMenu(); beep()">MENU (F3)</div>
-        <div class="side-btn" onclick="beep()">F4</div>
-        <div class="side-btn" onclick="beep()">F5</div>
-        <div class="side-btn" onclick="beep()">F6</div>
-        <div class="side-btn" onclick="beep()">F7</div>
+        <div class="side-btn">F4</div>
+        <div class="side-btn">F5</div>
+        <div class="side-btn">F6</div>
+        <div class="side-btn">F7</div>
     </div>
 
+    <!-- PROSTŘEDEK -->
     <div class="main-display">
-        <!-- Status Bar -->
         <div class="status-bar">
-            <span id="live-date">--.--.--</span>
-            <span class="delay">-13 m</span>
-            <span id="live-time">00:00:00</span>
+            <span id="live-date"></span> <span class="delay">-13 m</span> <span id="live-time"></span>
         </div>
 
-        <!-- Menu -->
         <div id="menu-overlay">
-            <div class="menu-input"><label>LINKA</label><input type="text" id="m-linka" value="790"></div>
-            <div class="menu-input"><label>SPOJ</label><input type="text" id="m-spoj" value="2"></div>
-            <div class="menu-input"><label>KURZ</label><input type="text" id="m-kurz" value="01"></div>
-            <div class="menu-input"><label>SMĚR</label><input type="text" id="m-smer" value="Telč"></div>
-            <div class="menu-input" style="grid-column: span 2;"><label>ZASTÁVKA</label><input type="text" id="m-zast" value="Studená"></div>
-            <div class="save-btn" onclick="saveMenu(); beep()">ULOŽIT A ZAVŘÍT</div>
+            <div class="menu-input"><label style="font-size:8px">LINKA</label><input type="text" id="m-linka" value="790"></div>
+            <div class="menu-input"><label style="font-size:8px">SPOJ</label><input type="text" id="m-spoj" value="2"></div>
+            <div class="menu-input" style="grid-column: span 2"><label style="font-size:8px">SMĚR</label><input type="text" id="m-smer" value="Telč, aut. nádr."></div>
+            <div class="side-btn bg-blue" style="grid-column: span 2; height: 30px" onclick="saveMenu(); beep()">ULOŽIT</div>
         </div>
 
         <div class="stop-list">
-            <div class="stop-row" style="background:#fffde7"><span>04:35</span><span style="color:red">25</span><span>Studená, 1.máje</span></div>
-            <div class="stop-row" style="background:#fff3e0"><span>04:38</span><span style="color:red">24</span><span>Studená, Bolíkov</span></div>
+            <div class="stop-row" style="background:#fff9c4"><span>04:35</span><span style="color:red">25</span><span>Studená, 1.máje</span></div>
+            <div class="stop-row" style="background:#ffecb3"><span>04:38</span><span style="color:red">24</span><span>Studená, Bolíkov</span></div>
             <div class="stop-row"><span>04:45</span><span style="color:red">23</span><span>Mrákotín</span></div>
             <div class="stop-row"><span>04:49</span><span style="color:red">22</span><span>Krahulčí</span></div>
         </div>
 
         <div class="price-area">
-            <div id="ticket-type">Vyberte tarif</div>
+            <div id="ticket-type">VYBERTE TARIF</div>
             <div id="display-price">0,00 Kč</div>
         </div>
 
         <div class="tariff-grid">
-            <div onclick="selectTicket('Základní', 11)" class="t-btn bg-yellow">Základní</div>
-            <div onclick="selectTicket('Dítě', 5)" class="t-btn bg-blue">Dítě</div>
-            <div onclick="selectTicket('Student', 5)" class="t-btn bg-blue">Student</div>
-            <div onclick="selectTicket('Senior 65+', 0)" class="t-btn bg-blue">Osoba 65</div>
-            <div onclick="selectTicket('ZTP', 2)" class="t-btn bg-blue">ZTP</div>
-            <div onclick="selectTicket('Zavazadlo', 10)" class="t-btn bg-blue">Pes</div>
-            <div onclick="selectTicket('Dítě do 6', 0)" class="t-btn bg-blue">Dítě do</div>
-            <div onclick="selectTicket('NavUstav', 0)" class="t-btn bg-blue">NavUstav</div>
-            <div onclick="selectTicket('Inv3st.', 5)" class="t-btn bg-blue">Inv3st.</div>
+            <div onclick="selectT('Základní', 11)" class="t-btn bg-yellow">Základní</div>
+            <div onclick="selectT('Dítě', 5)" class="t-btn bg-blue">Dítě</div>
+            <div onclick="selectT('Student', 5)" class="t-btn bg-blue">Student</div>
+            <div onclick="selectT('Osoba 65', 0)" class="t-btn bg-blue">Osoba 65</div>
+            <div onclick="selectT('ZTP', 2)" class="t-btn bg-blue">ZTP</div>
+            <div onclick="selectT('Pes', 10)" class="t-btn bg-blue">Pes</div>
+            <div onclick="selectT('Dítě do', 0)" class="t-btn bg-blue">Dítě do</div>
+            <div onclick="selectT('NavUstav', 0)" class="t-btn bg-blue">NavUstav</div>
+            <div onclick="selectT('Inv3st.', 5)" class="t-btn bg-blue">Inv3st.</div>
             <div class="t-btn bg-blue">▶</div>
         </div>
     </div>
 
+    <!-- PRAVÝ SLOUPEC -->
     <div class="right-panel">
-        <div style="display:grid; grid-template-columns:1fr 1fr; height:80px;">
-            <div class="key bg-blue" style="font-size:12px" onclick="payCard(); beep()">KARTA</div>
-            <div class="key bg-blue" style="font-size:12px" onclick="resetAll(); beep()">STORNO</div>
+        <div class="top-keys">
+            <div class="key bg-blue" style="font-size:12px" onclick="pay(); beep()">KARTA</div>
         </div>
         <div class="num-pad">
             <div class="key" onclick="num(7)">7</div><div class="key" onclick="num(8)">8</div><div class="key" onclick="num(9)">9</div>
             <div class="key" onclick="num(4)">4</div><div class="key" onclick="num(5)">5</div><div class="key" onclick="num(6)">6</div>
             <div class="key" onclick="num(1)">1</div><div class="key" onclick="num(2)">2</div><div class="key" onclick="num(3)">3</div>
-            <div class="key key-esc" onclick="resetAll()">ESC</div><div class="key" onclick="num(0)">0</div><div class="key key-ok" onclick="printTicket()">✓</div>
+            <div class="key key-esc" onclick="reset()">ESC</div><div class="key" onclick="num(0)">0</div><div class="key key-ok" onclick="ok()">✓</div>
         </div>
     </div>
 </div>
 
 <script>
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let currentPrice = 0;
-
-    // Funkce pro pípnutí
     function beep() {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = "sine";
-        osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.05);
+        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination); g.gain.value = 0.1;
+        o.frequency.value = 800; o.start(); o.stop(audioCtx.currentTime + 0.05);
     }
 
-    // Hodiny a datum
     function updateTime() {
-        const now = new Date();
-        document.getElementById('live-time').innerText = now.toLocaleTimeString('cs-CZ');
-        document.getElementById('live-date').innerText = now.toLocaleDateString('cs-CZ').replace(/\s/g, '');
+        const n = new Date();
+        document.getElementById('live-time').innerText = n.toLocaleTimeString('cs-CZ');
+        document.getElementById('live-date').innerText = n.toLocaleDateString('cs-CZ').replace(/\s/g, '');
     }
-    setInterval(updateTime, 1000);
-    updateTime();
+    setInterval(updateTime, 1000); updateTime();
 
-    // Logika jízdenek
-    function selectTicket(name, price) {
-        beep();
-        currentPrice = price;
-        document.getElementById('ticket-type').innerText = name;
-        document.getElementById('display-price').innerText = price.toFixed(2).replace('.', ',') + " Kč";
+    let price = 0;
+    function selectT(n, p) { price = p; document.getElementById('ticket-type').innerText = n; document.getElementById('display-price').innerText = p.toFixed(2).replace('.', ',') + " Kč"; beep(); }
+    function reset() { price = 0; document.getElementById('ticket-type').innerText = "VYBERTE TARIF"; document.getElementById('display-price').innerText = "0,00 Kč"; beep(); }
+    function pay() { if(price>0) { document.getElementById('display-price').innerText = "PŘILOŽTE..."; setTimeout(()=> { document.getElementById('display-price').innerText = "OK"; beep(); beep(); setTimeout(reset, 1000); }, 1500); } }
+    function ok() { if(price>0) { alert("Lístek vytisknut"); reset(); } }
+
+    function toggleMenu() { const m = document.getElementById('menu-overlay'); m.style.display = (m.style.display==='grid')?'none':'grid'; }
+    function saveMenu() { 
+        const d = { l: document.getElementById('m-linka').value, s: document.getElementById('m-spoj').value };
+        localStorage.setItem('synergy_cfg', JSON.stringify(d)); toggleMenu(); 
     }
-
-    function num(n) {
-        beep();
-        // Simulace ručního zadání ceny (pro pokročilé)
-    }
-
-    function resetAll() {
-        beep();
-        currentPrice = 0;
-        document.getElementById('ticket-type').innerText = "Vyberte tarif";
-        document.getElementById('display-price').innerText = "0,00 Kč";
-    }
-
-    function payCard() {
-        if(currentPrice === 0) return;
-        document.getElementById('display-price').innerText = "PŘILOŽTE KARTU";
-        setTimeout(() => {
-            beep(); beep();
-            document.getElementById('display-price').innerText = "ZAPLACENO";
-            setTimeout(resetAll, 2000);
-        }, 2000);
-    }
-
-    function printTicket() {
-        if(currentPrice === 0) return;
-        beep();
-        alert("Tisk jízdenky: " + document.getElementById('ticket-type').innerText);
-        resetAll();
-    }
-
-    // Menu logika
-    function toggleMenu() {
-        const menu = document.getElementById('menu-overlay');
-        menu.style.display = (menu.style.display === 'grid') ? 'none' : 'grid';
-    }
-
-    function saveMenu() {
-        const data = {
-            linka: document.getElementById('m-linka').value,
-            spoj: document.getElementById('m-spoj').value,
-            smer: document.getElementById('m-smer').value
-        };
-        localStorage.setItem('synergy_config', JSON.stringify(data));
-        toggleMenu();
-    }
-
-    // Načtení menu při startu
-    window.onload = () => {
-        const saved = localStorage.getItem('synergy_config');
-        if(saved) {
-            const parsed = JSON.parse(saved);
-            document.getElementById('m-linka').value = parsed.linka;
-            document.getElementById('m-spoj').value = parsed.spoj;
-            document.getElementById('m-smer').value = parsed.smer;
-        }
-    };
 </script>
-
 </body>
 </html>
