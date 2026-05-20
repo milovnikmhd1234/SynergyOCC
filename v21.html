@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Synergy OCC v21.0 Fast-Track</title>
+    <style>
+        :root {
+            --syn-blue: #004b93;
+            --syn-blue-dark: #002d5a;
+            --syn-orange: #f39200;
+            --syn-green: #28a745;
+            --syn-red: #dc3545;
+            --syn-black: #020202;
+            --syn-grey: #1a1c20;
+            --gold: #ffcc00;
+            --crt-green: #00ff41;
+            --white: #ffffff;
+            --bsod: #0000aa;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+            --font-ui: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background: #000; height: 100vh; width: 100vw; display: flex; overflow: hidden; font-family: var(--font-ui); color: var(--white); }
+
+        #chassis {
+            width: 100%; height: 100%; background: #111; position: relative;
+            border: 8px solid #222; display: flex; flex-direction: column;
+            box-shadow: inset 0 0 100px #000;
+        }
+
+        #viewport { flex: 1; margin: 2px; background: #000; position: relative; overflow: hidden; border: 1px solid #333; }
+
+        #viewport::before {
+            content: ""; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.12) 50%), 
+                        linear-gradient(90deg, rgba(255,0,0,0.01), rgba(0,255,0,0.01), rgba(0,0,255,0.01));
+            background-size: 100% 2px, 2px 100%; z-index: 50000; pointer-events: none;
+        }
+
+        .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; }
+
+        /* BOOT LAYER (MAX 30s) */
+        #layer-boot { background: #000; z-index: 100000; padding: 25px; color: var(--crt-green); font-family: var(--font-mono); font-size: 11px; line-height: 1.2; overflow: hidden; }
+        .boot-title { font-size: 14px; border-bottom: 1px solid var(--crt-green); padding-bottom: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        #boot-log { flex: 1; overflow-y: hidden; }
+        .boot-progress-bar { height: 10px; border: 1px solid var(--crt-green); margin-top: 10px; padding: 1px; }
+        #boot-fill { height: 100%; background: var(--crt-green); width: 0%; }
+
+        /* CRASH & ERROR SYSTEM */
+        #layer-bsod { background: var(--bsod); z-index: 200000; padding: 60px; color: #fff; font-family: var(--font-mono); }
+        
+        .sys-dialog {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 420px; background: #f0f0f0; color: #000; border: 3px solid #cc0000;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8); z-index: 300000; padding: 0; display: none;
+        }
+        .sys-dialog h3 { background: #cc0000; color: #fff; padding: 8px 12px; font-size: 14px; }
+        .sys-dialog .body-area { padding: 20px; font-size: 13px; font-weight: bold; line-height: 1.4; }
+        .sys-dialog button { float: right; margin: 0 20px 20px 0; padding: 6px 20px; background: #333; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+        .sys-dialog button:active { background: #666; }
+
+        /* LOGIN LAYER */
+        #layer-login { background: radial-gradient(circle, #1a1c20 0%, #000 100%); z-index: 50000; align-items: center; justify-content: center; }
+        .login-box { width: 320px; background: #1c1c1c; padding: 25px; border: 2px solid #333; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
+        .login-display { height: 50px; background: #000; color: var(--gold); border: 2px solid #444; text-align: center; line-height: 50px; font-size: 26px; font-family: var(--font-mono); margin-bottom: 15px; }
+        .login-label { font-size: 11px; color: #aaa; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+
+        /* MAIN APP LAYER */
+        #layer-app { background: var(--syn-black); z-index: 10000; }
+        .top-bar { height: 35px; background: #000; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 12px; font-family: var(--font-mono); }
+        
+        .main-container { flex: 1; display: grid; grid-template-columns: 1fr 100px; gap: 1px; background: #333; overflow: hidden; }
+        
+        /* ITINERARY */
+        .iti-view { background: #fff; color: #000; overflow-y: auto; position: relative; }
+        .iti-row { display: grid; grid-template-columns: 50px 30px 1fr 50px; padding: 13px 10px; border-bottom: 1px solid #eee; font-size: 14px; align-items: center; }
+        .iti-row.active { background: var(--syn-orange); color: #fff; font-weight: bold; border-left: 8px solid var(--syn-blue); }
+        .iti-row.passed { background: #fdfdfd; color: #bbb; }
+
+        /* SLIM NUMPAD */
+        .numpad { background: #0a0a0a; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+        .k { background: #1c2530; color: #fff; border: none; font-size: 18px; font-weight: bold; height: 50px; display: flex; align-items: center; justify-content: center; }
+        .k:active { background: var(--syn-blue); }
+        .k.orange { background: var(--syn-orange); }
+        .k.green { background: var(--syn-green); }
+        .k.wide { grid-column: span 2; }
+        .k.tall { grid-row: span 2; height: 101px; }
+        .k.small { font-size: 9px; color: #667085; text-transform: uppercase; }
+
+        /* TICKETS FOOTER */
+        .ticket-footer { height: 110px; background: #000; display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; padding: 2px; }
+        .t-btn { background: var(--syn-blue-dark); color: #fff; border: none; font-size: 9px; font-weight: bold; text-transform: uppercase; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .t-btn.active { background: var(--gold); color: #000; }
+        .t-btn.sys { background: #222; color: var(--gold); }
+        .t-btn span { font-size: 12px; margin-top: 2px; }
+
+        /* PRICE DISPLAY */
+        .price-tag { position: absolute; bottom: 115px; right: 110px; background: rgba(0,0,0,0.85); color: var(--syn-red); padding: 5px 15px; border: 2px solid var(--syn-red); font-size: 30px; font-weight: 900; font-family: var(--font-mono); z-index: 1000; pointer-events: none; }
+
+        /* HARDWARE CONTROLS */
+        #hw-controls { position: absolute; bottom: 15px; left: 15px; display: flex; gap: 15px; z-index: 1000000; }
+        .hw-button { width: 55px; height: 55px; background: #2d2d2d; border: 3px solid #444; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .hw-button:active { transform: scale(0.95); background: #111; }
+        #fingerprint { background: radial-gradient(circle, #0072bc 0%, #002d5a 100%); border-color: #004b93; }
+
+        /* MENU LAYER */
+        #layer-menu { background: var(--syn-grey); z-index: 60000; padding: 20px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .m-box { background: #000; border: 1px solid #444; padding: 10px; cursor: pointer; }
+        .m-box.active { border-color: var(--gold); background: #111; }
+        .m-box label { font-size: 9px; color: #777; display: block; }
+        .m-box b { color: var(--gold); font-size: 16px; font-family: var(--font-mono); }
+        
+        .editor { flex: 1; background: #000; border: 1px solid #333; overflow-y: auto; margin-bottom: 15px; padding: 10px; }
+        .edit-stop-row { display: grid; grid-template-columns: 1fr 70px 40px; gap: 5px; margin-bottom: 5px; }
+        .edit-stop-row input { background: #222; border: 1px solid #444; color: #fff; padding: 5px; font-size: 12px; }
+
+    </style>
+</head>
+<body>
+
+<div id="chassis">
+    <div id="hw-controls">
+        <div class="hw-button" title="Hlavní Vypínač" onclick="Core.power()">🍄</div>
+        <div class="hw-button" id="fingerprint" title="Čtečka otisků" onclick="UI.triggerFingerprint()">🫆</div>
+    </div>
+
+    <div id="viewport">
+
+        <div id="layer-boot" class="layer">
+            <div class="boot-title">
+                <span>SYNERGY FAST-BOOT ROM v21.0</span>
+                <span id="boot-clock">00:00</span>
+            </div>
+            <div id="boot-log"></div>
+            <div class="boot-progress-bar"><div id="boot-fill"></div></div>
+        </div>
+
+        <div id="layer-bsod" class="layer">
+            <h1 style="font-size: 100px; margin-bottom: 20px;">:(</h1>
+            <p style="font-size: 20px; line-height: 1.5;">V počítači došlo k problému a je třeba jej restartovat. Právě shromažďujeme určité informace o chybách a následně provedeme restart.</p>
+            <p style="margin-top: 40px;">0% dokončeno</p>
+            <div style="margin-top: 100px; font-size: 12px; opacity: 0.8;">
+                Kód zastavení: KERNEL_STARTUP_HANDSHAKE_FAILED<br>
+                Co selhalo: syn_auth_core.sys
+            </div>
+        </div>
+
+        <div id="error-dialog" class="sys-dialog">
+            <h3 id="err-title">SYSTÉMOVÁ CHYBA</h3>
+            <div class="body-area" id="err-body">Nespecifikovaná chyba jádra.</div>
+            <button onclick="UI.dismissError()">OK / RESTART</button>
+        </div>
+
+        <div id="layer-login" class="layer">
+            <div class="login-box">
+                <div class="login-label" id="log-stage-label">Zadejte ID řidiče</div>
+                <div class="login-display" id="log-lcd">ID?</div>
+                <div class="numpad" style="background:transparent">
+                    <button class="k" onclick="UI.inLog(1)">1</button><button class="k" onclick="UI.inLog(2)">2</button><button class="k" onclick="UI.inLog(3)">3</button>
+                    <button class="k" onclick="UI.inLog(4)">4</button><button class="k" onclick="UI.inLog(5)">5</button><button class="k" onclick="UI.inLog(6)">6</button>
+                    <button class="k" onclick="UI.inLog(7)">7</button><button class="k" onclick="UI.inLog(8)">8</button><button class="k" onclick="UI.inLog(9)">9</button>
+                    <button class="k small" onclick="UI.clearLog()">CLR</button><button class="k" onclick="UI.inLog(0)">0</button><button class="k green" onclick="UI.submitLog()">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="layer-app" class="layer">
+            <div class="top-bar">
+                <div><span id="st-ids">790968 / 2</span> <span id="st-kurz" style="color:var(--gold); margin-left:10px;">K: 101</span></div>
+                <div style="display:flex; gap:15px; align-items:center;">
+                    <div id="st-delay" style="background:#222; padding:2px 8px; border-radius:3px;">+0 m</div>
+                    <span id="st-clock">00:00:00</span>
+                    <div style="width:10px; height:10px; border-radius:50%; background:var(--syn-green);"></div>
+                </div>
+            </div>
+
+            <div class="main-container">
+                <div class="iti-view" id="iti-box"></div>
+                <div class="numpad">
+                    <button class="k small">ZÓN</button>
+                    <button class="k" onclick="UI.inApp(7)">7</button><button class="k" onclick="UI.inApp(8)">8</button><button class="k" onclick="UI.inApp(9)">9</button>
+                    <button class="k small">TAR</button>
+                    <button class="k" onclick="UI.inApp(4)">4</button><button class="k" onclick="UI.inApp(5)">5</button><button class="k" onclick="UI.inApp(6)">6</button>
+                    <button class="k small">KAR</button>
+                    <button class="k" onclick="UI.inApp(1)">1</button><button class="k" onclick="UI.inApp(2)">2</button><button class="k" onclick="UI.inApp(3)">3</button>
+                    <button class="k small">STO</button><button class="k" onclick="UI.inApp(0)">0</button><button class="k orange tall" onclick="UI.next()">DALŠÍ</button>
+                    <button class="k green wide" onclick="UI.pay()">OK</button>
+                </div>
+            </div>
+
+            <div class="price-tag" id="price-val">11,00 Kč</div>
+
+            <div class="ticket-footer">
+                <button class="t-btn sys" onclick="UI.openMenu()">MENU</button>
+                <button class="t-btn active" onclick="UI.setPrice(this, 11)">Obyčejné<span>11,-</span></button>
+                <button class="t-btn" onclick="UI.setPrice(this, 5)">Dítě<span>5,-</span></button>
+                <button class="t-btn" onclick="UI.setPrice(this, 8)">Student<span>8,-</span></button>
+                <button class="t-btn" onclick="UI.setPrice(this, 8)">Senior<span>8,-</span></button>
+                <button class="t-btn" onclick="UI.setPrice(this, 0)">ZTP<span>0,-</span></button>
+                <button class="t-btn" onclick="UI.setPrice(this, 7)">Pes<span>7,-</span></button>
+                <button class="t-btn" onclick="UI.setPrice(this, 0)">Zavaz<span>0,-</span></button>
+                <button class="t-btn sys" onclick="Core.triggerError('bsod')">DIAG</button>
+                <button class="t-btn sys" style="background:var(--syn-red)" onclick="location.reload()">OFF</button>
+            </div>
+        </div>
+
+        <div id="layer-menu" class="layer">
+            <h2 style="color:var(--gold); margin-bottom:15px; text-align:center;">SYNERGY CONFIG</h2>
+            <div class="menu-grid">
+                <div class="m-box active" id="mb-line" onclick="UI.setMTarget('line')"><label>LINKA</label><b id="v-line">790968</b></div>
+                <div class="m-box" id="mb-spoj" onclick="UI.setMTarget('spoj')"><label>SPOJ</label><b id="v-spoj">2</b></div>
+                <div class="m-box" id="mb-kurz" onclick="UI.setMTarget('kurz')"><label>KURZ</label><b id="v-kurz">101</b></div>
+            </div>
+            <div class="m-box" style="margin-bottom:10px;"><label>DOPRAVCE</label><input type="text" id="v-carrier" value="Arriva Morava" style="background:none; border:none; color:#fff; width:100%; font-size:16px;"></div>
+            <div class="editor" id="edit-box"></div>
+            <button onclick="UI.addS()" style="width:100%; padding:10px; background:var(--syn-green); border:none; color:#fff; font-weight:bold; margin-bottom:10px;">+ PŘIDAT ZASTÁVKU</button>
+            
+            <div style="display:flex; gap:10px;">
+                <div class="numpad" style="width:200px;">
+                    <button class="k" onclick="UI.inMenu(7)">7</button><button class="k" onclick="UI.inMenu(8)">8</button><button class="k" onclick="UI.inMenu(9)">9</button>
+                    <button class="k" onclick="UI.inMenu(4)">4</button><button class="k" onclick="UI.inMenu(5)">5</button><button class="k" onclick="UI.inMenu(6)">6</button>
+                    <button class="k" onclick="UI.inMenu(1)">1</button><button class="k" onclick="UI.inMenu(2)">2</button><button class="k" onclick="UI.inMenu(3)">3</button>
+                    <button class="k small" onclick="UI.clearMenu()">CLR</button><button class="k" onclick="UI.inMenu(0)">0</button><button class="k green" onclick="UI.saveMenu()">OK</button>
+                </div>
+                <button class="k" style="flex:1; background:var(--syn-red)" onclick="UI.closeMenu()">STORNO</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+/**
+ * SYNERGY CORE ENGINE v21.0
+ * Optimized Modular Scripting for Industrial Terminals
+ */
+
+const Core = {
+    state: {
+        booted: false, power: false, crashed: false,
+        bootTime: 12, // Radically reduced boot time (12 seconds)
+    },
+
+    power() {
+        if(this.state.power) { location.reload(); return; }
+        this.state.power = true;
+        this.boot();
+    },
+
+    async boot() {
+        const log = document.getElementById('boot-log');
+        const fill = document.getElementById('boot-fill');
+        const timer = document.getElementById('boot-clock');
+        document.getElementById('layer-boot').style.display = 'flex';
+
+        const lines = [
+            "Bypassing POST Diagnostics...", "Loading Synergy Flash-ROM Kernel...",
+            "Fast-Mounting partition /dev/nvme0n1p2...", "Initializing core display drivers...",
+            "Loading biometric peripheral modules...", "Sensing fingerprint hardware status... ONLINE",
+            "Syncing database tables for offline validation...", "Loading UI templates...",
+            "Ready for authentication sequence."
+        ];
+
+        // Filler log compression for speed
+        for(let i=0; i<30; i++) {
+            lines.splice(3+i, 0, `Quick-check module 0x${Math.floor(Math.random()*256).toString(16).toUpperCase()}... OK`);
+        }
+
+        let elapsed = 0;
+        let step = this.state.bootTime / lines.length;
+
+        for(let i=0; i<lines.length; i++) {
+            const d = document.createElement('div');
+            d.innerText = `[${this.fmtTime(elapsed)}] ${lines[i]}`;
+            log.appendChild(d);
+            log.scrollTop = log.scrollHeight;
+            fill.style.width = ((i+1)/lines.length)*100 + "%";
+            await new Promise(r => setTimeout(r, step * 1000));
+            elapsed += step;
+            timer.innerText = this.fmtTime(elapsed);
+        }
+
+        document.getElementById('layer-boot').style.display = 'none';
+        document.getElementById('layer-login').style.display = 'flex';
+        this.state.booted = true;
+    },
+
+    fmtTime(s) {
+        return "00:" + Math.floor(s).toString().padStart(2,'0');
+    },
+
+    triggerError(type) {
+        Audio.play('alert');
+        const dlg = document.getElementById('error-dialog');
+        const title = document.getElementById('err-title');
+        const body = document.getElementById('err-body');
+        
+        switch(type) {
+            case 'thermal':
+                title.innerText = "CRITICAL THERMAL FAULT";
+                body.innerText = "CHYBA: Interní čidlo vykázalo teplotu 96°C. Deska procesoru je přehřátá. Spusťte chladicí cyklus vozidla nebo kontaktujte depo.";
+                dlg.style.display = 'block';
+                break;
+            case 'storage':
+                title.innerText = "LOW STORAGE ERROR";
+                body.innerText = "CHYBA: Na disku NVMe nezbývá dostatek místa pro zápis transakčního logu (Zbývá 0 KB). Prodej jízdenek zablokován.";
+                dlg.style.display = 'block';
+                break;
+            case 'startup':
+                title.innerText = "STARTUP APPIOS FAILURE";
+                body.innerText = "CHYBA: Inicializační handshake selhal při mapování sdílené paměti. Kritické systémové procesy neodpovídají.";
+                dlg.style.display = 'block';
+                break;
+            case 'bsod':
+                this.state.crashed = true;
+                document.getElementById('layer-bsod').style.display = 'block';
+                break;
+        }
+    }
+};
+
+const Data = {
+    line: "790968", spoj: "2", kurz: "101", carrier: "Arriva Morava",
+    users: {
+        "10342": "3508",
+        "00000": "0000"
+    },
+    currentID: "",
+    stage: "ID", // ID or PIN
+    stops: [
+        {n: "Ostrava,,ÚAN", t: "08:00"}, {n: "Ostrava,,Vítkovice", t: "08:15"},
+        {n: "Ostrava,,Hrabová", t: "08:25"}, {n: "Paskov,,střed", t: "08:35"},
+        {n: "Frýdek-Místek,,Riviéra", t: "08:45"}, {n: "Palkovice,,střed", t: "09:00"}
+    ],
+    idx: 0, price: 11, buffer: "", menuBuf: "", mTarget: 'line'
+};
+
+const UI = {
+    inLog(n) {
+        Data.buffer += n;
+        this.updLogView();
+    },
+    clearLog() {
+        Data.buffer = "";
+        this.updLogView();
+    },
+    updLogView() {
+        const lcd = document.getElementById('log-lcd');
+        if (Data.stage === "ID") {
+            lcd.innerText = Data.buffer || "ID?";
+        } else {
+            lcd.innerText = "*".repeat(Data.buffer.length) || "PIN?";
+        }
+    },
+    triggerFingerprint() {
+        if (!Core.state.booted) return;
+        Audio.play('login');
+        Data.currentID = "10342"; // Auto pick first user
+        Data.stage = "PIN";
+        Data.buffer = "";
+        document.getElementById('log-stage-label').innerText = "Otisk rozpoznán. Zadejte PIN";
+        this.updLogView();
+    },
+    submitLog() {
+        if (Data.stage === "ID") {
+            if (Data.users[Data.buffer] !== undefined) {
+                Data.currentID = Data.buffer;
+                Data.stage = "PIN";
+                Data.buffer = "";
+                document.getElementById('log-stage-label').innerText = "Zadejte heslo (PIN)";
+                this.updLogView();
+                Audio.play('login');
+            } else {
+                Audio.play('alert');
+                alert("Neznámé ID řidiče!");
+                Data.buffer = "";
+                this.updLogView();
+            }
+        } else if (Data.stage === "PIN") {
+            if (Data.users[Data.currentID] === Data.buffer) {
+                
+                // CRASH RANDOMIZER ENGINE AT LOGIN
+                const dice = Math.random();
+                if (dice < 0.20) {
+                    Core.triggerError('thermal');
+                    return;
+                } else if (dice < 0.40) {
+                    Core.triggerError('storage');
+                    return;
+                } else if (dice < 0.60) {
+                    Core.triggerError('startup');
+                    return;
+                }
+                
+                // If it passes (no errors)
+                Audio.play('login');
+                document.getElementById('layer-login').style.display = 'none';
+                document.getElementById('layer-app').style.display = 'flex';
+                this.startApp();
+            } else {
+                Audio.play('alert');
+                alert("Chybné heslo!");
+                Data.buffer = "";
+                this.updLogView();
+            }
+        }
+    },
+
+    dismissError() {
+        location.reload();
+    },
+
+    startApp() {
+        this.renderIti();
+        this.updStatus();
+        setInterval(() => {
+            if(Core.state.crashed) return;
+            document.getElementById('st-clock').innerText = new Date().toLocaleTimeString('cs-CZ');
+        }, 1000);
+    },
+
+    renderIti() {
+        const box = document.getElementById('iti-box');
+        box.innerHTML = "";
+        Data.stops.forEach((s, i) => {
+            const r = document.createElement('div');
+            r.className = `iti-row ${i === Data.idx ? 'active' : ''} ${i < Data.idx ? 'passed' : ''}`;
+            r.innerHTML = `<div>${s.t}</div><div style="opacity:0.3">25|</div><div>${s.n}</div><div style="text-align:right">Z:${100+i}</div>`;
+            box.appendChild(r);
+        });
+        const active = box.querySelector('.active');
+        if(active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+
+    next() {
+        if(Data.idx < Data.stops.length - 1) {
+            Data.idx++;
+            Audio.play('gong');
+            this.renderIti();
+        }
+    },
+
+    setPrice(btn, p) {
+        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); Data.price = p;
+        document.getElementById('price-val').innerText = p.toFixed(2).replace('.', ',') + " Kč";
+    },
+
+    pay() { Audio.play('pay'); alert("TISK JÍZDENKY..."); },
+
+    openMenu() { document.getElementById('layer-menu').style.display = 'flex'; this.renderEdit(); },
+    closeMenu() { document.getElementById('layer-menu').style.display = 'none'; },
+
+    setMTarget(t) {
+        Data.mTarget = t;
+        document.querySelectorAll('.m-box').forEach(b => b.classList.remove('active'));
+        document.getElementById('mb-'+t).classList.add('active');
+        Data.menuBuf = "";
+    },
+
+    inMenu(n) {
+        const el = document.getElementById('v-'+Data.mTarget);
+        if(Data.menuBuf === "") el.innerText = "";
+        Data.menuBuf += n; el.innerText = Data.menuBuf;
+    },
+
+    clearMenu() { Data.menuBuf = ""; document.getElementById('v-'+Data.mTarget).innerText = "0"; },
+
+    renderEdit() {
+        const box = document.getElementById('edit-box'); box.innerHTML = "";
+        Data.stops.forEach((s, i) => {
+            box.innerHTML += `<div class="edit-stop-row">
+                <input type="text" value="${s.n}" onchange="Data.stops[${i}].n=this.value">
+                <input type="text" value="${s.t}" onchange="Data.stops[${i}].t=this.value">
+                <button class="k" style="height:28px; background:red" onclick="Data.stops.splice(${i},1);UI.renderEdit()">X</button>
+            </div>`;
+        });
+    },
+
+    addS() { Data.stops.push({n:"Nová", t:"10:00"}); this.renderEdit(); },
+
+    saveMenu() {
+        Data.line = document.getElementById('v-line').innerText;
+        Data.spoj = document.getElementById('v-spoj').innerText;
+        Data.kurz = document.getElementById('v-kurz').innerText;
+        Data.carrier = document.getElementById('v-carrier').value;
+        this.updStatus(); this.renderIti(); this.closeMenu();
+        Audio.play('pay');
+    },
+
+    updStatus() {
+        document.getElementById('st-ids').innerText = `${Data.line} / ${Data.spoj}`;
+        document.getElementById('st-kurz').innerText = `K: ${Data.kurz}`;
+    },
+
+    inApp(n) {}
+};
+
+const Audio = {
+    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+    play(type) {
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.connect(g); g.connect(this.ctx.destination);
+        g.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        
+        if(type === 'login') { o.frequency.value = 950; o.start(); o.stop(this.ctx.currentTime+0.08); }
+        if(type === 'pay') { o.frequency.value = 1400; o.start(); o.stop(this.ctx.currentTime+0.15); }
+        if(type === 'gong') { o.frequency.value = 440; o.type = 'triangle'; o.start(); o.stop(this.ctx.currentTime+0.35); 
+            const o2 = this.ctx.createOscillator(); o2.connect(g); o2.frequency.value = 330; o2.type='triangle'; o2.start(this.ctx.currentTime+0.25); o2.stop(this.ctx.currentTime+0.6); }
+        if(type === 'alert') { o.frequency.value = 1800; o.start(); o.stop(this.ctx.currentTime+0.4); }
+    }
+};
+
+</script>
+</body>
+</html>
