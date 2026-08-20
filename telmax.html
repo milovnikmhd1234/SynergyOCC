@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TELMAX - Palubní počítač řidiče s prodejem jízdenek</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+  body { background: #111; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #fff; }
+
+  /* Konstrukce terminálu TELMAX */
+  .terminal {
+    width: 850px; height: 550px; background: #222; border: 12px solid #333;
+    border-radius: 12px; display: flex; flex-direction: column; position: relative;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8); overflow: hidden;
+  }
+
+  /* Horní lišta */
+  .top-bar {
+    background: #004080; height: 40px; display: flex; justify-content: space-between;
+    align-items: center; padding: 0 15px; font-weight: bold; border-bottom: 2px solid #0059b3; font-size: 14px;
+  }
+  .driver-info { color: #ffcc00; }
+  .revenue-info { color: #00ff66; background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 4px; }
+
+  /* Obrazovky */
+  .screen { display: none; flex: 1; padding: 15px; flex-direction: column; background: #181818; position: relative; }
+  .screen.active { display: flex; }
+
+  /* Přihlašovací obrazovka */
+  .login-box { display: flex; flex-direction: column; gap: 15px; width: 320px; margin: auto; background: #252525; padding: 20px; border-radius: 8px; border: 1px solid #444; }
+  .input-group { display: flex; flex-direction: column; gap: 5px; }
+  .input-group label { font-size: 13px; color: #aaa; }
+  .input-group input { padding: 10px; background: #111; border: 1px solid #555; color: #00ff66; font-size: 18px; text-align: center; border-radius: 4px; font-family: monospace; }
+  
+  .btn { padding: 10px; background: #0059b3; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; }
+  .btn:active { background: #003d7e; }
+  .btn-success { background: #00802b; }
+  .btn-success:active { background: #004d1a; }
+  .btn-danger { background: #b30000; }
+  .btn-danger:active { background: #800000; }
+
+  /* Výběr linky / spoje */
+  .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+  .select-box select { width: 100%; padding: 10px; background: #252525; color: #fff; border: 1px solid #444; border-radius: 4px; font-size: 16px; }
+
+  /* Layout hlavního displeje */
+  .main-layout { display: grid; grid-template-columns: 1fr 320px; gap: 15px; flex: 1; min-height: 0; }
+  
+  /* Seznam zastávek */
+  .stops-list { background: #111; border: 1px solid #333; overflow-y: auto; border-radius: 4px; height: 100%; }
+  .stop-item { padding: 10px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; color: #aaa; font-size: 13px; }
+  .stop-item.current { background: #003300; color: #00ff66; font-weight: bold; border-left: 5px solid #00ff66; }
+  .stop-item.next { color: #fff; }
+
+  /* Panel Prodeje jízdenek */
+  .ticket-panel { background: #222; border: 1px solid #444; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .ticket-panel h4 { color: #ffcc00; text-align: center; font-size: 14px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+  
+  .ticket-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .btn-ticket { padding: 8px 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: center; }
+  .btn-ticket.selected { background: #0059b3; border-color: #0099ff; font-weight: bold; }
+
+  .cart-summary { background: #111; padding: 8px; border-radius: 4px; border: 1px solid #333; font-size: 12px; }
+  .cart-price { font-size: 18px; color: #00ff66; font-weight: bold; text-align: right; margin-top: 4px; }
+
+  /* Ovládací panely & Chyby tlačítka */
+  .bottom-row { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .controls { display: flex; gap: 10px; }
+  .error-menu { display: flex; gap: 5px; padding-top: 6px; border-top: 1px solid #333; flex-wrap: wrap; }
+  .btn-err { padding: 4px 8px; background: #333; color: #ff9999; border: 1px solid #555; border-radius: 4px; font-size: 10px; cursor: pointer; }
+
+  /* Modální okno chyby (Windows Style) */
+  .error-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+  .error-box { width: 420px; background: #c0c0c0; border: 3px inset #fff; color: #000; box-shadow: 5px 5px 15px #000; font-family: 'Tahoma', sans-serif; }
+  .error-header { background: #000080; color: white; padding: 4px 8px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between; }
+  .error-body { padding: 15px; display: flex; gap: 15px; align-items: center; }
+  .error-icon { font-size: 28px; background: red; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; font-weight: bold; flex-shrink: 0; }
+  .error-footer { padding: 8px; text-align: center; background: #e0e0e0; }
+  .error-btn { padding: 4px 20px; background: #c0c0c0; border: 2px outset #fff; font-weight: bold; cursor: pointer; }
+
+  /* Animace tisku jízdenky */
+  .ticket-print-pop { display: none; position: absolute; bottom: 80px; right: 20px; background: #fff; color: #000; padding: 10px; border: 1px dashed #000; font-family: 'Courier New', monospace; font-size: 11px; box-shadow: 0 0 15px rgba(255,255,255,0.5); z-index: 90; animation: slideUp 0.4s ease-out; }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="terminal">
+  <!-- Horní stavová lišta -->
+  <div class="top-bar">
+    <span>TELMAX v4.12</span>
+    <span class="driver-info" id="top-driver">Odhlášeno</span>
+    <span class="revenue-info">Tržba: <span id="top-revenue">0</span> Kč</span>
+    <span id="clock">00:00</span>
+  </div>
+
+  <!-- 1. Přihlašovací obrazovka -->
+  <div class="screen active" id="screen-login">
+    <div class="login-box">
+      <h3 style="text-align:center; margin-bottom:5px;">Přihlášení řidiče</h3>
+      <div class="input-group">
+        <label>ID Řidiče:</label>
+        <input type="text" id="input-id" maxlength="5" placeholder="10342">
+      </div>
+      <div class="input-group">
+        <label>PIN:</label>
+        <input type="password" id="input-pin" maxlength="4" placeholder="****">
+      </div>
+      <button class="btn" onclick="login()">PŘIHLÁSIT SE</button>
+      <div id="login-msg" style="color:#ff4444; font-size:12px; text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- 2. Výběr obsluhy -->
+  <div class="screen" id="screen-select">
+    <h2>Nastavení obsluhy</h2>
+    <br>
+    <div class="grid-form">
+      <div class="select-box">
+        <label>Turnus / Služba:</label>
+        <select id="select-turnus">
+          <option>Turnus 101/01</option>
+          <option>Turnus 102/03</option>
+          <option>Turnus 375/02</option>
+        </select>
+      </div>
+      <div class="select-box">
+        <label>Linka:</label>
+        <select id="select-line" onchange="updateTripOptions()">
+          <option value="375">375 (Brandýs - Praha)</option>
+          <option value="367">367 (Brandýs - Mělník)</option>
+        </select>
+      </div>
+      <div class="select-box">
+        <label>Spoj:</label>
+        <select id="select-trip">
+          <!-- Dynamicky načteno -->
+        </select>
+      </div>
+    </div>
+    <button class="btn" style="margin-top:20px;" onclick="startTrip()">ZAHÁJIT SPOJ</button>
+  </div>
+
+  <!-- 3. Hlavní obrazovka obsluhy + Prodej jízdenek -->
+  <div class="screen" id="screen-main">
+    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+      <div><strong>Linka:</strong> <span id="route-line">---</span></div>
+      <div><strong>Cíl:</strong> <span id="route-dest" style="color:#ffcc00;">---</span></div>
+    </div>
+
+    <div class="main-layout">
+      <!-- Seznam zastávek -->
+      <div class="stops-list" id="stops-container">
+        <!-- Zastávky -->
+      </div>
+
+      <!-- Prodej Jízdenek -->
+      <div class="ticket-panel">
+        <h4>PRODEJ JÍZDENEK</h4>
+        <div class="ticket-grid">
+          <button class="btn-ticket selected" onclick="selectTariff('Plnoletý/Plné', 30, this)">Plné<br><b>30 Kč</b></button>
+          <button class="btn-ticket" onclick="selectTariff('Zlevněné 50%', 15, this)">Zlevněné<br><b>15 Kč</b></button>
+          <button class="btn-ticket" onclick="selectTariff('Student/Seni 75%', 7, this)">Student/Sen<br><b>7 Kč</b></button>
+          <button class="btn-ticket" onclick="selectTariff('Zavazadlo/Pes', 10, this)">Zavazadlo<br><b>10 Kč</b></button>
+        </div>
+
+        <div class="cart-summary">
+          <div>Typ: <b id="cart-type">Plnoletý/Plné</b></div>
+          <div class="cart-price"><span id="cart-price-val">30</span> Kč</div>
+        </div>
+
+        <button class="btn btn-success" onclick="sellTicket('HOTOVOST')">💵 VYDAT (HOTOVOST)</button>
+        <button class="btn" style="background:#8a2be2;" onclick="sellTicket('KARTA')">💳 VYDAT (KARTA)</button>
+      </div>
+    </div>
+
+    <!-- Spodní sekce -->
+    <div class="bottom-row">
+      <div class="controls">
+        <button class="btn" style="flex:1;" onclick="nextStop()">DALŠÍ ZASTÁVKA (GPS)</button>
+        <button class="btn btn-danger" onclick="logout()">ODHLÁSIT</button>
+      </div>
+
+      <!-- Tlačítka chyb -->
+      <div class="error-menu">
+        <span style="font-size:10px; color:#aaa; width:100%;">Test chybových hlášení:</span>
+        <button class="btn-err" onclick="triggerError('CHYBA SYSTEMU', 'Přehřátí palubního počítače! Teplota procesoru > 95°C.')">Přehřátí</button>
+        <button class="btn-err" onclick="triggerError('ÚLOŽIŠTĚ', 'Malo místa v úložišti terminálu (zbývá 0 KB).')">Úložiště</button>
+        <button class="btn-err" onclick="triggerError('ZÁVADA', 'Technická závada systému odbavení. Tiskárna nedostupná.')">Závada</button>
+        <button class="btn-err" onclick="triggerError('SYSTEM CRITICAL', 'eror 9999161630172618126 -> chyba dotykové obrazovky')">Error 9999...</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Náhled vytištěné jízdenky -->
+  <div class="ticket-print-pop" id="ticket-pop">
+    <div style="text-align:center; font-weight:bold; border-bottom:1px solid #000; margin-bottom:4px;">TELMAX - JÍZDENKA</div>
+    <div>Řidič: <span id="print-driver">--</span></div>
+    <div>Linka: <span id="print-line">--</span></div>
+    <div>Typ: <span id="print-type">--</span></div>
+    <div>Platba: <span id="print-pay">--</span></div>
+    <div style="font-weight:bold; margin-top:4px; border-top:1px solid #000; padding-top:2px;">CENA: <span id="print-price">--</span> Kč</div>
+  </div>
+
+  <!-- Windows Error Modal -->
+  <div class="error-overlay" id="error-dialog">
+    <div class="error-box">
+      <div class="error-header">
+        <span id="err-title">Systémová chyba</span>
+        <span style="cursor:pointer;" onclick="closeError()">X</span>
+      </div>
+      <div class="error-body">
+        <div class="error-icon">X</div>
+        <div id="err-text" style="font-size:12px;">Popis chyby...</div>
+      </div>
+      <div class="error-footer">
+        <button class="error-btn" onclick="closeError()">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Databáze řidičů
+  const drivers = {
+    "10342": { pin: "3181", name: "Petr Šmatlák" },
+    "0000": { pin: "0900", name: "Host" }
+  };
+
+  // Databáze linek
+  const routeData = {
+    "375": [
+      { name: "Brandýs n.L.-St.Boleslav, nám.", zone: "101" },
+      { name: "Brandýs n.L., Sídliště", zone: "101" },
+      { name: "Podolanka", zone: "102" },
+      { name: "Praha, Černý Most", zone: "P" }
+    ],
+    "367": [
+      { name: "Brandýs n.L.-St.Boleslav, nádraží", zone: "101" },
+      { name: "Neratovice, Dům kultury", zone: "103" },
+      { name: "Mělník, Aut.nádr.", zone: "105" }
+    ]
+  };
+
+  let currentDriver = null;
+  let currentStopIndex = 0;
+  let totalRevenue = 0;
+  let selectedTicket = { name: "Plnoletý/Plné", price: 30 };
+
+  // Hodiny
+  function updateClock() {
+    const d = new Date();
+    document.getElementById('clock').textContent = 
+      String(d.getHours()).padStart(2, '0') + ":" + String(d.getMinutes()).padStart(2, '0');
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  function updateTripOptions() {
+    const line = document.getElementById('select-line').value;
+    const tripSelect = document.getElementById('select-trip');
+    tripSelect.innerHTML = '';
+    
+    const trips = line === "375" ? ["Spoj 1 (06:15)", "Spoj 3 (07:15)", "Spoj 5 (08:15)"] : ["Spoj 2 (06:40)", "Spoj 4 (08:40)"];
+    trips.forEach(t => {
+      let opt = document.createElement('option');
+      opt.textContent = t;
+      tripSelect.appendChild(opt);
+    });
+  }
+  updateTripOptions();
+
+  // Přihlášení
+  function login() {
+    const id = document.getElementById('input-id').value;
+    const pin = document.getElementById('input-pin').value;
+    const msg = document.getElementById('login-msg');
+
+    if (drivers[id] && drivers[id].pin === pin) {
+      currentDriver = drivers[id].name;
+      document.getElementById('top-driver').textContent = "Řidič: " + currentDriver;
+      msg.textContent = "";
+      showScreen('screen-select');
+    } else {
+      msg.textContent = "Nespravné ID nebo PIN!";
+    }
+  }
+
+  // Odhlášení
+  function logout() {
+    currentDriver = null;
+    document.getElementById('top-driver').textContent = "Odhlášeno";
+    document.getElementById('input-id').value = "";
+    document.getElementById('input-pin').value = "";
+    showScreen('screen-login');
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // Zahájení spoje
+  function startTrip() {
+    const line = document.getElementById('select-line').value;
+    document.getElementById('route-line').textContent = line;
+    
+    const stops = routeData[line];
+    document.getElementById('route-dest').textContent = stops[stops.length - 1].name;
+    
+    currentStopIndex = 0;
+    renderStops(line);
+    showScreen('screen-main');
+  }
+
+  function renderStops(line) {
+    const container = document.getElementById('stops-container');
+    container.innerHTML = '';
+    const stops = routeData[line];
+
+    stops.forEach((stop, idx) => {
+      const div = document.createElement('div');
+      div.className = 'stop-item';
+      if (idx === currentStopIndex) div.classList.add('current');
+      else if (idx === currentStopIndex + 1) div.classList.add('next');
+
+      div.innerHTML = `
+        <span>${idx + 1}. ${stop.name}</span>
+        <span>Zóna ${stop.zone}</span>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  function nextStop() {
+    const line = document.getElementById('select-line').value;
+    const stops = routeData[line];
+    if (currentStopIndex < stops.length - 1) {
+      currentStopIndex++;
+      renderStops(line);
+    }
+  }
+
+  // Výběr tarifu
+  function selectTariff(name, price, btn) {
+    document.querySelectorAll('.btn-ticket').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    
+    selectedTicket = { name, price };
+    document.getElementById('cart-type').textContent = name;
+    document.getElementById('cart-price-val').textContent = price;
+  }
+
+  // Prodej jízdenky a tisk
+  function sellTicket(payMethod) {
+    totalRevenue += selectedTicket.price;
+    document.getElementById('top-revenue').textContent = totalRevenue;
+
+    // Zobrazení vytištěného lístku
+    document.getElementById('print-driver').textContent = currentDriver;
+    document.getElementById('print-line').textContent = document.getElementById('select-line').value;
+    document.getElementById('print-type').textContent = selectedTicket.name;
+    document.getElementById('print-pay').textContent = payMethod;
+    document.getElementById('print-price').textContent = selectedTicket.price;
+
+    const pop = document.getElementById('ticket-pop');
+    pop.style.display = 'block';
+    setTimeout(() => { pop.style.display = 'none'; }, 2500);
+  }
+
+  // Vyvolání chyby
+  function triggerError(title, text) {
+    document.getElementById('err-title').textContent = title;
+    document.getElementById('err-text').textContent = text;
+    document.getElementById('error-dialog').style.display = 'flex';
+  }
+
+  function closeError() {
+    document.getElementById('error-dialog').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
